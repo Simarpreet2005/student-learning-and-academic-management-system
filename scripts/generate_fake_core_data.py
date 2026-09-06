@@ -1,16 +1,14 @@
 import os
 import django
-import random
-from typing import List
-from django.utils import timezone
 from faker import Faker
 from factory.django import DjangoModelFactory
-from factory import SubFactory, LazyAttribute, Iterator, LazyFunction
-from core.models import ActivityLog, NewsAndEvents, Session, Semester, SEMESTER, POST
+from factory import SubFactory, LazyAttribute, LazyFunction
 
 # Set up Django environment
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
+
+from core.models import ActivityLog, NewsAndEvents, Session, Semester, SEMESTER, POST
 
 fake = Faker()
 
@@ -107,21 +105,17 @@ def generate_fake_core_data(
         num_activity_logs (int): Number of ActivityLog instances to generate.
     """
     # Generate fake NewsAndEvents instances
-    news_and_events: List[NewsAndEvents] = NewsAndEventsFactory.create_batch(
-        num_news_and_events
-    )
+    NewsAndEventsFactory.create_batch(num_news_and_events)
     print(f"Generated {num_news_and_events} NewsAndEvents instances.")
 
     # Generate fake Session instances
-    sessions: List[Session] = SessionFactory.create_batch(num_sessions)
+    SessionFactory.create_batch(num_sessions)
     print(f"Generated {num_sessions} Session instances.")
 
     # Generate fake Semester instances
-    semesters: List[Semester] = SemesterFactory.create_batch(num_semesters)
+    SemesterFactory.create_batch(num_semesters)
     print(f"Generated {num_semesters} Semester instances.")
 
     # Generate fake ActivityLog instances
-    activity_logs: List[ActivityLog] = ActivityLogFactory.create_batch(
-        num_activity_logs
-    )
+    ActivityLogFactory.create_batch(num_activity_logs)
     print(f"Generated {num_activity_logs} ActivityLog instances.")

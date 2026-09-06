@@ -15,18 +15,10 @@ from course.models import (
 from accounts.models import User, DepartmentHead
 from core.models import Session
 
-from .generate_fake_accounts_data import UserFactory, ProgramFactory
+from .generate_fake_accounts_data import UserFactory
 from .generate_fake_core_data import SessionFactory
 
 fake = Faker()
-
-
-class DepartmentHeadFactory(DjangoModelFactory):
-    class Meta:
-        model = DepartmentHead
-
-    user = SubFactory(UserFactory)
-    department = SubFactory(ProgramFactory)
 
 
 class ProgramFactory(DjangoModelFactory):
@@ -43,6 +35,14 @@ class ProgramFactory(DjangoModelFactory):
 
     title: str = LazyAttribute(lambda x: fake.sentence(nb_words=3))
     summary: str = LazyAttribute(lambda x: fake.paragraph())
+
+
+class DepartmentHeadFactory(DjangoModelFactory):
+    class Meta:
+        model = DepartmentHead
+
+    user = SubFactory(UserFactory)
+    department = SubFactory(ProgramFactory)
 
 
 class CourseFactory(DjangoModelFactory):
@@ -200,7 +200,8 @@ def populate_course_allocation(num_allocations: int) -> None:
         allocation.courses.set(random_courses)
 
         print(
-            f"Created CourseAllocation for lecturer: {lecturer.username} with {len(random_courses)} courses."
+            f"Created CourseAllocation for lecturer: {lecturer.username} "
+            f"with {len(random_courses)} courses."
         )
 
     print(f"Successfully populated {num_allocations} CourseAllocation instances.")

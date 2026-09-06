@@ -90,7 +90,8 @@ class Quiz(models.Model):
         default=False,
         verbose_name=_("Draft"),
         help_text=_(
-            "If yes, the quiz is not displayed in the quiz list and can only be taken by users who can edit quizzes."
+            "If yes, the quiz is not displayed in the quiz list "
+            "and can only be taken by users who can edit quizzes."
         ),
     )
     timestamp = models.DateTimeField(auto_now=True)
@@ -102,13 +103,13 @@ class Quiz(models.Model):
         verbose_name_plural = _("Quizzes")
 
     def __str__(self):
-        return self.title
+        return str(self.title)
 
     def save(self, *args, **kwargs):
         if self.single_attempt:
             self.exam_paper = True
 
-        if not (0 <= self.pass_mark <= 100):
+        if not 0 <= self.pass_mark <= 100:
             raise ValidationError(_("Pass mark must be between 0 and 100."))
 
         super().save(*args, **kwargs)
@@ -175,14 +176,12 @@ class Progress(models.Model):
                 [str(question.quiz), str(score_to_add), str(possible_to_add), ""]
             )
             self.save()
+        return None, None
 
     def show_exams(self):
         if self.user.is_superuser:
             return Sitting.objects.filter(complete=True).order_by("-end")
-        else:
-            return Sitting.objects.filter(user=self.user, complete=True).order_by(
-                "-end"
-            )
+        return Sitting.objects.filter(user=self.user, complete=True).order_by("-end")
 
 
 class SittingManager(models.Manager):
@@ -334,8 +333,7 @@ class Sitting(models.Model):
     def result_message(self):
         if self.check_if_passed:
             return _("You have passed this quiz, congratulations!")
-        else:
-            return _("You failed this quiz, try again.")
+        return _("You failed this quiz, try again.")
 
     def add_user_answer(self, question, guess):
         user_answers = json.loads(self.user_answers)
@@ -396,7 +394,7 @@ class Question(models.Model):
         verbose_name_plural = _("Questions")
 
     def __str__(self):
-        return self.content
+        return str(self.content)
 
 
 class MCQuestion(Question):
@@ -424,10 +422,9 @@ class MCQuestion(Question):
     def order_choices(self, queryset):
         if self.choice_order == "content":
             return queryset.order_by("choice_text")
-        elif self.choice_order == "random":
+        if self.choice_order == "random":
             return queryset.order_by("?")
-        else:
-            return queryset
+        return queryset
 
     def get_choices(self):
         return self.order_choices(Choice.objects.filter(question=self))
@@ -462,7 +459,7 @@ class Choice(models.Model):
         verbose_name_plural = _("Choices")
 
     def __str__(self):
-        return self.choice_text
+        return str(self.choice_text)
 
 
 class EssayQuestion(Question):

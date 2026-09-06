@@ -1,17 +1,16 @@
+from typing import List
 import os
 import django
-from typing import List, Tuple
 from django.utils import timezone
-from faker import Faker
 from factory.django import DjangoModelFactory
 from factory import SubFactory, LazyAttribute, Iterator
-from django_extensions.management.commands import runscript
+from faker import Faker
 
 # Set up Django environment
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
-from accounts.models import User, Student, Parent, DepartmentHead, LEVEL, RELATION_SHIP
+from accounts.models import User, Student, Parent, LEVEL, RELATION_SHIP
 from course.models import Program
 
 fake = Faker()
@@ -99,7 +98,7 @@ class ProgramFactory(DjangoModelFactory):
         Returns:
             Program: The created Program instance.
         """
-        program, created = Program.objects.get_or_create(
+        program, _ = Program.objects.get_or_create(
             title=kwargs.get("title"), defaults=kwargs
         )
         return program

@@ -1,17 +1,15 @@
-import stripe
-import uuid
 import json
-
-from django.shortcuts import render
-from django.http import JsonResponse
-from django.conf import settings
-from django.shortcuts import redirect
-from django.views.generic.base import TemplateView
-
-from django.http import JsonResponse
+import uuid
 
 import gopay
-from gopay.enums import Recurrence, PaymentInstrument, BankSwiftCode, Currency, Language
+from gopay.enums import BankSwiftCode, Currency, Language, PaymentInstrument
+import stripe
+
+from django.conf import settings
+from django.http import JsonResponse
+from django.shortcuts import redirect, render
+from django.views.generic.base import TemplateView
+
 from .models import Invoice
 
 
@@ -39,7 +37,7 @@ class PaymentGetwaysView(TemplateView):
     template_name = "payments/payment_gateways.html"
 
     def get_context_data(self, **kwargs):
-        context = super(PaymentGetwaysView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context["key"] = settings.STRIPE_PUBLISHABLE_KEY
         context["amount"] = 500
         context["description"] = "Stripe Payment"
@@ -52,7 +50,7 @@ def stripe_charge(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
 
     if request.method == "POST":
-        charge = stripe.Charge.create(
+        stripe.Charge.create(
             amount=500,
             currency="eur",
             description="A Django charge",
@@ -65,6 +63,7 @@ def stripe_charge(request):
         return redirect("completed")
         # return JsonResponse({"invoice_code": invoice.invoice_code}, status=201)
         # return render(request, 'payments/charge.html')
+    return redirect("payment_gateways")
 
 
 def gopay_charge(request):
@@ -82,18 +81,6 @@ def gopay_charge(request):
                 "timeout": 30,
             }
         )
-
-        # recurrent payment must have field ''
-        recurrentPayment = {
-            "recurrence": {
-                "recurrence_cycle": Recurrence.DAILY,
-                "recurrence_period": "7",
-                "recurrence_date_to": "2015-12-31",
-            }
-        }
-
-        # pre-authorized payment must have field 'preauthorization'
-        preauthorizedPayment = {"preauthorization": True}
 
         response = payments.create_payment(
             {

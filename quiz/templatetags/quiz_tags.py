@@ -11,10 +11,7 @@ def correct_answer_for_all(context, question):
     """
     answers = question.get_choices()
     incorrect_list = context.get("incorrect_questions", [])
-    if question.id in incorrect_list:
-        user_was_incorrect = True
-    else:
-        user_was_incorrect = False
+    user_was_incorrect = question.id in incorrect_list
 
     return {"previous": {"answers": answers}, "user_was_incorrect": user_was_incorrect}
 

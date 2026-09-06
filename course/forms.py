@@ -51,7 +51,7 @@ class CourseAllocationForm(forms.ModelForm):
         fields = ["lecturer", "courses"]
 
     def __init__(self, *args, **kwargs):
-        super(CourseAllocationForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields["lecturer"].queryset = User.objects.filter(is_lecturer=True)
 
 
@@ -73,7 +73,7 @@ class EditCourseAllocationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         #    user = kwargs.pop('user')
-        super(EditCourseAllocationForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields["lecturer"].queryset = User.objects.filter(is_lecturer=True)
 
 

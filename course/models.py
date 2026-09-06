@@ -155,13 +155,13 @@ class Upload(models.Model):
         ext = self.file.name.split(".")[-1].lower()
         if ext in ("doc", "docx"):
             return "word"
-        elif ext == "pdf":
+        if ext == "pdf":
             return "pdf"
-        elif ext in ("xls", "xlsx"):
+        if ext in ("xls", "xlsx"):
             return "excel"
-        elif ext in ("ppt", "pptx"):
+        if ext in ("ppt", "pptx"):
             return "powerpoint"
-        elif ext in ("zip", "rar", "7zip"):
+        if ext in ("zip", "rar", "7zip"):
             return "archive"
         return "file"
 

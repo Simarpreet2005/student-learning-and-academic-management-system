@@ -95,7 +95,7 @@ class User(AbstractUser):
         return full_name
 
     def __str__(self):
-        return "{} ({})".format(self.username, self.get_full_name)
+        return f"{self.username} ({self.get_full_name})"
 
     @property
     def get_user_role(self):
@@ -107,13 +107,15 @@ class User(AbstractUser):
             role = _("Lecturer")
         elif self.is_parent:
             role = _("Parent")
+        else:
+            role = _("User")
 
         return role
 
     def get_picture(self):
         try:
             return self.picture.url
-        except:
+        except Exception:
             no_picture = settings.MEDIA_URL + "default.png"
             return no_picture
 
@@ -128,7 +130,7 @@ class User(AbstractUser):
                 output_size = (300, 300)
                 img.thumbnail(output_size)
                 img.save(self.picture.path)
-        except:
+        except Exception:
             pass
 
     def delete(self, *args, **kwargs):
@@ -209,4 +211,4 @@ class DepartmentHead(models.Model):
         ordering = ("-user__date_joined",)
 
     def __str__(self):
-        return "{}".format(self.user)
+        return str(self.user)

@@ -173,7 +173,7 @@ def add_score_for(request, id):
                 a.gpa = gpa
                 a.cgpa = cgpa
                 a.save()
-            except:
+            except Result.DoesNotExist:
                 Result.objects.get_or_create(
                     student=student.student,
                     gpa=gpa,
@@ -238,7 +238,7 @@ def grade_result(request):
             )
             previousCGPA = a.cgpa
             break
-        except:
+        except Result.DoesNotExist:
             previousCGPA = 0
 
     context = {
@@ -324,8 +324,8 @@ def result_sheet_pdf_view(request, id):
     print("\nsettings.STATICFILES_DIRS[0]", settings.STATICFILES_DIRS[0])
     logo = settings.STATICFILES_DIRS[0] + "/img/brand.png"
     im = Image(logo, 1 * inch, 1 * inch)
-    im.__setattr__("_offs_x", -200)
-    im.__setattr__("_offs_y", -45)
+    im._offs_x = -200
+    im._offs_y = -45
     Story.append(im)
 
     style = getSampleStyleSheet()
@@ -356,18 +356,20 @@ def result_sheet_pdf_view(request, id):
     Story.append(title)
     Story.append(Spacer(1, 0.1 * inch))
 
-    normal = style["Normal"]
-    normal.alignment = TA_CENTER
-    normal.fontName = "Helvetica"
-    normal.fontSize = 10
-    normal.leading = 15
-    level = result.filter(course_id=id).first()
+    normal.leading = 18
+    title = "<b>" + current_semester.session.session + " ACADEMIC SESSION REPORT</b>"
+    title = Paragraph(title.upper(), normal)
+    Story.append(title)
+    Story.append(Spacer(1, 0.1 * inch))
+
+    level = TakenCourse.objects.filter(
+        course__level=request.user.student.level
+    ).first()
     title = "<b>Level: </b>" + str(level.course.level)
     title = Paragraph(title.upper(), normal)
     Story.append(title)
     Story.append(Spacer(1, 0.6 * inch))
 
-    elements = []
     count = 0
     header = [("S/N", "ID NO.", "FULL NAME", "TOTAL", "GRADE", "POINT", "COMMENT")]
 
@@ -400,9 +402,6 @@ def result_sheet_pdf_view(request, id):
                 student.comment,
             )
         ]
-        color = colors.black
-        if student.grade == "F":
-            color = colors.red
         count += 1
 
         t_body = Table(data, colWidths=[inch])

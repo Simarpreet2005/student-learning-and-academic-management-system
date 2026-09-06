@@ -202,7 +202,7 @@ class CourseAllocationFormView(CreateView):
     def form_valid(self, form):
         lecturer = form.cleaned_data["lecturer"]
         selected_courses = form.cleaned_data["courses"]
-        allocation, created = CourseAllocation.objects.get_or_create(lecturer=lecturer)
+        allocation, _ = CourseAllocation.objects.get_or_create(lecturer=lecturer)
         allocation.courses.set(selected_courses)
         messages.success(
             self.request, f"Courses allocated to {lecturer.get_full_name} successfully."
@@ -397,73 +397,72 @@ def course_registration(request):
         data.pop("csrfmiddlewaretoken", None)  # remove csrf_token
         for key in data.keys():
             ids = ids + (str(key),)
-        for s in range(0, len(ids)):
-            course = Course.objects.get(pk=ids[s])
+        for item_id in ids:
+            course = Course.objects.get(pk=item_id)
             obj = TakenCourse.objects.create(student=student, course=course)
             obj.save()
         messages.success(request, "Courses registered successfully!")
         return redirect("course_registration")
-    else:
-        current_semester = Semester.objects.filter(is_current_semester=True).first()
-        if not current_semester:
-            messages.error(request, "No active semester found.")
-            return render(request, "course/course_registration.html")
 
-        # student = Student.objects.get(student__pk=request.user.id)
-        student = get_object_or_404(Student, student__id=request.user.id)
-        taken_courses = TakenCourse.objects.filter(student__student__id=request.user.id)
-        t = ()
-        for i in taken_courses:
-            t += (i.course.pk,)
+    current_semester = Semester.objects.filter(is_current_semester=True).first()
+    if not current_semester:
+        messages.error(request, "No active semester found.")
+        return render(request, "course/course_registration.html")
 
-        courses = (
-            Course.objects.filter(
-                program__pk=student.program.id,
-                level=student.level,
-                semester=current_semester,
-            )
-            .exclude(id__in=t)
-            .order_by("year")
+    student = get_object_or_404(Student, student__id=request.user.id)
+    taken_courses = TakenCourse.objects.filter(student__student__id=request.user.id)
+    t = ()
+    for i in taken_courses:
+        t += (i.course.pk,)
+
+    courses = (
+        Course.objects.filter(
+            program__pk=student.program.id,
+            level=student.level,
+            semester=current_semester,
         )
-        all_courses = Course.objects.filter(
-            level=student.level, program__pk=student.program.id
-        )
+        .exclude(id__in=t)
+        .order_by("year")
+    )
+    all_courses = Course.objects.filter(
+        level=student.level, program__pk=student.program.id
+    )
 
-        no_course_is_registered = False  # Check if no course is registered
-        all_courses_are_registered = False
+    no_course_is_registered = False  # Check if no course is registered
+    all_courses_are_registered = False
 
-        registered_courses = Course.objects.filter(level=student.level).filter(id__in=t)
-        if (
-            registered_courses.count() == 0
-        ):  # Check if number of registered courses is 0
-            no_course_is_registered = True
+    registered_courses = Course.objects.filter(level=student.level).filter(id__in=t)
+    if (
+        registered_courses.count() == 0
+    ):  # Check if number of registered courses is 0
+        no_course_is_registered = True
 
-        if registered_courses.count() == all_courses.count():
-            all_courses_are_registered = True
+    if registered_courses.count() == all_courses.count():
+        all_courses_are_registered = True
 
-        total_first_semester_credit = 0
-        total_sec_semester_credit = 0
-        total_registered_credit = 0
-        for i in courses:
-            if i.semester == "First":
-                total_first_semester_credit += int(i.credit)
-            if i.semester == "Second":
-                total_sec_semester_credit += int(i.credit)
-        for i in registered_courses:
-            total_registered_credit += int(i.credit)
-        context = {
-            "is_calender_on": True,
-            "all_courses_are_registered": all_courses_are_registered,
-            "no_course_is_registered": no_course_is_registered,
-            "current_semester": current_semester,
-            "courses": courses,
-            "total_first_semester_credit": total_first_semester_credit,
-            "total_sec_semester_credit": total_sec_semester_credit,
-            "registered_courses": registered_courses,
-            "total_registered_credit": total_registered_credit,
-            "student": student,
-        }
-        return render(request, "course/course_registration.html", context)
+    total_first_semester_credit = 0
+    total_sec_semester_credit = 0
+    total_registered_credit = 0
+    for i in courses:
+        if i.semester == "First":
+            total_first_semester_credit += int(i.credit)
+        if i.semester == "Second":
+            total_sec_semester_credit += int(i.credit)
+    for i in registered_courses:
+        total_registered_credit += int(i.credit)
+    context = {
+        "is_calender_on": True,
+        "all_courses_are_registered": all_courses_are_registered,
+        "no_course_is_registered": no_course_is_registered,
+        "current_semester": current_semester,
+        "courses": courses,
+        "total_first_semester_credit": total_first_semester_credit,
+        "total_sec_semester_credit": total_sec_semester_credit,
+        "registered_courses": registered_courses,
+        "total_registered_credit": total_registered_credit,
+        "student": student,
+    }
+    return render(request, "course/course_registration.html", context)
 
 
 @login_required
@@ -478,6 +477,7 @@ def course_drop(request):
             TakenCourse.objects.filter(student=student, course=course).delete()
         messages.success(request, "Courses dropped successfully!")
         return redirect("course_registration")
+    return redirect("course_registration")
 
 
 # ########################################################

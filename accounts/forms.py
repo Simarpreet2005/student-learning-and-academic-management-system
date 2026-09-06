@@ -366,7 +366,7 @@ class EmailValidationOnForgotPassword(PasswordResetForm):
         if not User.objects.filter(email__iexact=email, is_active=True).exists():
             msg = "There is no user registered with the specified E-mail address. "
             self.add_error("email", msg)
-            return email
+        return email
 
 
 class ParentAddForm(UserCreationForm):

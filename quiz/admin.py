@@ -33,14 +33,14 @@ class QuizAdminForm(TranslationModelForm):
         fields = ["title_en"]
 
     def __init__(self, *args, **kwargs):
-        super(QuizAdminForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.instance.pk:
             self.fields["questions"].initial = (
                 self.instance.question_set.all().select_subclasses()
             )
 
     def save(self, commit=True):
-        quiz = super(QuizAdminForm, self).save(commit=False)
+        quiz = super().save(commit=False)
         quiz.save()
         quiz.question_set.set(self.cleaned_data["questions"])
         self.save_m2m()
@@ -66,7 +66,7 @@ class MCQuestionAdmin(TranslationAdmin):
     list_display = ("content",)
     # list_filter = ('category',)
     fieldsets = [
-        ("figure" "quiz" "choice_order", {"fields": ("content", "explanation")})
+        (None, {"fields": ("content", "explanation")})
     ]
 
     search_fields = ("content", "explanation")

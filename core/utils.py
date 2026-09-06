@@ -13,7 +13,7 @@ def send_email(user, subject, msg):
         msg,
         settings.EMAIL_FROM_ADDRESS,
         [user.email],
-        fail_silently=False,
+        fail_silently=True,
     )
 
 
@@ -32,6 +32,7 @@ def send_html_email(subject, recipient_list, template, context):
         settings.EMAIL_FROM_ADDRESS,
         recipient_list,
         html_message=html_message,
+        fail_silently=True,
     )
 
 
