@@ -1,6 +1,6 @@
 {% extends 'registration/registration_base.html' %}
 {% load i18n %}
-{% block title %}{% trans 'Dj Learning Management System - Login' %}{% endblock title %}
+{% block title %}{% trans 'Login | Academic Management System' %}{% endblock title %}
 {% load crispy_forms_tags %}
 {% block content %}
 
@@ -42,7 +42,7 @@
   $('#login-form').submit(function (e) {
     // e.preventDefault();
     $('#login-btn').addClass('disabled')
-    $('#login-btn').html(`<i class="fas fa-sign-in-alt"></i> Signining you in . . .`)
+    $('#login-btn').html(`<i class="fas fa-sign-in-alt"></i> Signing you in . . .`)
   })
 
   $("#username").on("input", function () {

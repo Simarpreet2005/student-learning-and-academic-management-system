@@ -1,97 +1,108 @@
-![Group 23](https://github.com/user-attachments/assets/4e84251a-27b0-462b-bd5e-fb0bcadc4694)
+# Role-Based Student Learning and Academic Management System
 
-### The world’s most high-end designed, lightweight, and feature-rich learning management system.
+A robust, full-stack Django web application designed for higher education institutions to manage academic programs, role-based user workflows, student course registrations, grading, assessments, and automated reporting.
 
-# SkyLearn: Open source learning management system
+---
 
-Learning management system using Django web framework. You might want to develop a learning management system (also known as a school/college management system) for a school/college organization, or simply for the purpose of learning the tech stack and enhancing your portfolio. In either case, this project would be a great way to get started. The aim is to create the world's most lightweight yet feature-rich learning management system. However, this is not possible without your support, so please give it a star ⭐️.
+## 🌟 Key Features & Role-Based Workflows
 
-_Documentation is under development_
+### 👑 Administrator
+- **Analytics & Dashboard**: Real-time institution statistics including student/lecturer counts, course numbers, and allocation breakdowns.
+- **User Management**: Add, update, and manage student and lecturer profiles with automated credential generation.
+- **Academic Hierarchy**: Configure programs, academic sessions/years, and semesters. Set active semesters globally.
+- **Course Allocation**: Allocate courses to designated lecturers.
+- **News & Announcements**: Post announcements, bulletins, and events visible to all users.
 
-Let's enhance the project by contributing! 👩‍💻👩‍💻
+### 👨‍🏫 Lecturer
+- **Assigned Courses**: View assigned courses, course materials, and student rosters.
+- **Course Content Management**: Upload course documentation, syllabi, and lecture video links.
+- **Continuous Assessment & Grading**: Submit scores for assignments, midterms, attendance, and final examinations.
+- **Automated Calculations**: System calculates total score, GPA point, grade letter, and status (Pass/Fail).
+- **PDF Result Sheets**: Generate and download printable official semester result sheets.
+- **Quizzes & Marking**: Create multi-choice/true-false quizzes, view student submissions, and mark essay responses.
 
-<img width="1440" alt="screenshot" src="https://github.com/user-attachments/assets/08644f49-6ae0-4695-86cc-afe331c6f61a">
+### 🎓 Student
+- **Course Registration**: Add and drop courses for the active academic semester.
+- **Course Access**: Access lecture notes, resources, and video lectures.
+- **Quizzes**: Attempt time-limited quizzes with category tracking and instant feedback.
+- **Grades & Assessment**: View semester-wise assessment scores and cumulative grade point averages (CGPA).
+- **Registration Form PDF**: Generate and download official signed student course registration slips.
 
-## Current features
+---
 
-- Dashboard: School demographics and analytics. Restricted to only admins
-- News And Events: All users can access this page
-- Admin manages students(Add, Update, Delete)
-- Admin manages lecturers(Add, Update, Delete)
-- Students can Add and Drop courses
-- Lecturers submit students' scores: _Attendance, Mid exam, Final exam, assignment_
-- The system calculates students' _Total, average, point, and grades automatically_
-- Grade comment for each student with a **pass**, **fail**, or **pass with a warning**
-- Assessment result page for students
-- Grade result page for students
-- Session/year and semester management
-- Assessments and grades will be grouped by semester
-- Upload video and documentation for each course
-- PDF generator for students' registration slip and grade result
-- Page access restriction
-- Storing of quiz results under each user
-- Question order randomization
-- Previous quiz scores can be viewed on the category page
-- Correct answers can be shown after each question or all at once at the end
-- Logged-in users can return to an incomplete quiz to finish it and non-logged-in users can complete a quiz if their session persists
-- The quiz can be limited to one attempt per user
-- Questions can be given a category
-- Success rate for each category can be monitored on a progress page
-- Explanation for each question result can be given
-- Pass marks can be set
-- Multiple choice question type
-- True/False question type
-- Essay question type................._Coming soon_
-- Custom message displayed for those that pass or fail a quiz
-- Custom permission (view_sittings) added, allowing users with that permission to view quiz results from users
-- A marking page which lists completed quizzes, can be filtered by quiz or user, and is used to mark essay questions
+## 🏗️ Architecture & Apps Structure
 
-# Quick note for future contributors
+| App | Purpose |
+| :--- | :--- |
+| `accounts` | Custom `User` model, role-based permissions (`@admin_required`, `@lecturer_required`, `@student_required`), authentication, and profiles. |
+| `core` | Sessions, semesters, academic programs, and site-wide news/announcements. |
+| `course` | Course catalogs, uploads, course allocation, and material management. |
+| `result` | Continuous assessments, grading calculations, and ReportLab PDF document generators. |
+| `quiz` | Quiz management, sittings, multiple-choice questions, and score tracking. |
+| `payments` | Optional invoice and tuition payment processing module. |
+| `search` | Global search engine for courses and academic records. |
 
-If you would like to contribute, simply begin by implementing one from the list in the `TODO.md` file.
+---
 
-# Requirements:
+## 🛠️ Technology Stack
 
-> The following program(s) are required to run the project
+- **Backend**: Python 3.8+ / 3.10+, Django 4.2+
+- **Frontend**: HTML5, Bootstrap 5.3, FontAwesome 6.5, jQuery
+- **Document Engine**: ReportLab Platypus (PDF generation)
+- **Database**: SQLite (development) / PostgreSQL (production ready)
+- **Authentication**: Role-based access control with custom session security decorators
 
-- [Python3.8+](https://www.python.org/downloads/)
+---
 
-# Installation
+## 🚀 Getting Started
 
-- Clone the repo with
+### 1. Prerequisites
+Ensure Python 3.8+ or Python 3.10+ is installed on your system.
 
+### 2. Environment Setup
 ```bash
-git clone https://github.com/SkyCascade/SkyLearn.git
-```
+# Clone the repository
+git clone https://github.com/Simarpreet2005/student-learning-and-academic-management-system.git
+cd student-learning-and-academic-management-system
 
-- Create and activate a python virtual environment
+# Create virtual environment
+python -m venv .venv
 
-```bash
+# Activate virtual environment
+# Windows:
+.\.venv\Scripts\activate
+# Linux/macOS:
+source .venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-- Create `.env` file inside the root directory
+### 3. Environment Variables
+Create a `.env` file in the root directory:
+```env
+SECRET_KEY=your-secure-secret-key-here
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
+```
 
-- Copy and paste everything in the `.env.example` file into the `.env` file. Don't forget to customize the variable values
-
+### 4. Database Initialization
 ```bash
+python manage.py makemigrations
 python manage.py migrate
-```
-
-```bash
 python manage.py createsuperuser
+python manage.py collectstatic --no-input
 ```
 
+### 5. Run the Application
 ```bash
 python manage.py runserver
 ```
+Visit `http://127.0.0.1:8000/` in your browser.
 
-Last but not least, go to this address http://127.0.0.1:8000
+---
 
-#### _Check [this page](https://adilmohak.github.io/dj-lms-starter/) for more insight and support._
+## 📄 License & Attribution
 
-# References
-
-- Quiz part: https://github.com/tomwalker/django_quiz
-
-#### Show your support by ⭐️ this project!
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+Initial open-source foundation adapted from SkyLearn / django_quiz.

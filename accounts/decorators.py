@@ -6,20 +6,14 @@ def admin_required(
     redirect_to="/",
 ):
     """
-    Decorator for views that checks that the logged-in user is a superuser,
-    redirects to the specified URL if necessary.
+    Decorator for views that checks that the logged-in user is a superuser.
     """
-
-    # Define the test function: checks if the user is active and a superuser
     def test_func(user):
-        return user.is_active and user.is_superuser
+        return bool(user.is_authenticated and user.is_active and user.is_superuser)
 
-    # Define the wrapper function to handle the response
     def wrapper(request, *args, **kwargs):
         if test_func(request.user):
-            # Call the original function if the user passes the test
             return function(request, *args, **kwargs) if function else None
-        # Redirect to the specified URL if the user fails the test
         return redirect(redirect_to)
 
     return wrapper if function else test_func
@@ -30,20 +24,15 @@ def lecturer_required(
     redirect_to="/",
 ):
     """
-    Decorator for views that checks that the logged-in user is a superuser,
-    redirects to the specified URL if necessary.
+    Decorator for views that checks that the logged-in user is a lecturer or superuser.
     """
-
-    # Define the test function: checks if the user is active and a superuser
     def test_func(user):
-        return user.is_active and user.is_lecturer or user.is_superuser
+        is_lecturer = getattr(user, "is_lecturer", False)
+        return bool(user.is_authenticated and user.is_active and (is_lecturer or user.is_superuser))
 
-    # Define the wrapper function to handle the response
     def wrapper(request, *args, **kwargs):
         if test_func(request.user):
-            # Call the original function if the user passes the test
             return function(request, *args, **kwargs) if function else None
-        # Redirect to the specified URL if the user fails the test
         return redirect(redirect_to)
 
     return wrapper if function else test_func
@@ -54,20 +43,15 @@ def student_required(
     redirect_to="/",
 ):
     """
-    Decorator for views that checks that the logged-in user is a superuser,
-    redirects to the specified URL if necessary.
+    Decorator for views that checks that the logged-in user is a student or superuser.
     """
-
-    # Define the test function: checks if the user is active and a superuser
     def test_func(user):
-        return user.is_active and user.is_student or user.is_superuser
+        is_student = getattr(user, "is_student", False)
+        return bool(user.is_authenticated and user.is_active and (is_student or user.is_superuser))
 
-    # Define the wrapper function to handle the response
     def wrapper(request, *args, **kwargs):
         if test_func(request.user):
-            # Call the original function if the user passes the test
             return function(request, *args, **kwargs) if function else None
-        # Redirect to the specified URL if the user fails the test
         return redirect(redirect_to)
 
     return wrapper if function else test_func

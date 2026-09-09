@@ -6,7 +6,9 @@ from django.views import defaults as default_views
 from django.conf.urls.i18n import i18n_patterns
 from django.views.i18n import JavaScriptCatalog
 
-admin.site.site_header = "SkyLearn Admin"
+admin.site.site_header = "Student Learning & Academic Management System Admin"
+admin.site.site_title = "Academic Management System Portal"
+admin.site.index_title = "System Administration"
 
 urlpatterns = [
     path("admin/", admin.site.urls),

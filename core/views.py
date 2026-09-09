@@ -38,6 +38,7 @@ def dashboard_view(request):
 
 
 @login_required
+@lecturer_required
 def post_add(request):
     if request.method == "POST":
         form = NewsAndEventsForm(request.POST)

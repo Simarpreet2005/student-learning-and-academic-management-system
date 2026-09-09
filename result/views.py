@@ -1,3 +1,4 @@
+import os
 from django.shortcuts import render, get_object_or_404
 from django.contrib import messages
 from django.http import HttpResponseRedirect
@@ -292,7 +293,9 @@ def result_sheet_pdf_view(request, id):
         + "_resultSheet.pdf"
     )
     fname = fname.replace("/", "-")
-    flocation = settings.MEDIA_ROOT + "/result_sheet/" + fname
+    folder = os.path.join(settings.MEDIA_ROOT, "result_sheet")
+    os.makedirs(folder, exist_ok=True)
+    flocation = os.path.join(folder, fname)
 
     doc = SimpleDocTemplate(
         flocation,
@@ -308,25 +311,12 @@ def result_sheet_pdf_view(request, id):
     Story = [Spacer(1, 0.2)]
     style = styles["Normal"]
 
-    # picture = request.user.picture
-    # l_pic = Image(picture, 1*inch, 1*inch)
-    # l_pic.__setattr__("_offs_x", 200)
-    # l_pic.__setattr__("_offs_y", -130)
-    # Story.append(l_pic)
-
-    # logo = settings.MEDIA_ROOT + "/logo/logo-mini.png"
-    # im_logo = Image(logo, 1*inch, 1*inch)
-    # im_logo.__setattr__("_offs_x", -218)
-    # im_logo.__setattr__("_offs_y", -60)
-    # Story.append(im_logo)
-
-    print("\nsettings.MEDIA_ROOT", settings.MEDIA_ROOT)
-    print("\nsettings.STATICFILES_DIRS[0]", settings.STATICFILES_DIRS[0])
-    logo = settings.STATICFILES_DIRS[0] + "/img/brand.png"
-    im = Image(logo, 1 * inch, 1 * inch)
-    im._offs_x = -200
-    im._offs_y = -45
-    Story.append(im)
+    logo = os.path.join(settings.STATICFILES_DIRS[0], "img", "brand.png")
+    if os.path.exists(logo):
+        im = Image(logo, 1 * inch, 1 * inch)
+        im._offs_x = -200
+        im._offs_y = -45
+        Story.append(im)
 
     style = getSampleStyleSheet()
     normal = style["Normal"]
@@ -452,9 +442,9 @@ def course_registration_form(request):
     courses = TakenCourse.objects.filter(student__student__id=request.user.id)
     fname = request.user.username + ".pdf"
     fname = fname.replace("/", "-")
-    # flocation = '/tmp/' + fname
-    # print(MEDIA_ROOT + "\\" + fname)
-    flocation = settings.MEDIA_ROOT + "/registration_form/" + fname
+    folder = os.path.join(settings.MEDIA_ROOT, "registration_form")
+    os.makedirs(folder, exist_ok=True)
+    flocation = os.path.join(folder, fname)
     doc = SimpleDocTemplate(
         flocation, rightMargin=15, leftMargin=15, topMargin=0, bottomMargin=0
     )
@@ -470,7 +460,7 @@ def course_registration_form(request):
     normal.fontName = "Helvetica"
     normal.fontSize = 12
     normal.leading = 18
-    title = "<b>EZOD UNIVERSITY OF TECHNOLOGY, ADAMA</b>"  # TODO: Make this dynamic
+    title = "<b>STUDENT LEARNING & ACADEMIC MANAGEMENT SYSTEM</b>"
     title = Paragraph(title.upper(), normal)
     Story.append(title)
     style = getSampleStyleSheet()
@@ -523,7 +513,7 @@ def course_registration_form(request):
                 "<b>Session : " + current_session.session.upper() + "</b>",
                 styles["Normal"],
             ),
-            Paragraph("<b>Level: " + student.level + "</b>", styles["Normal"]),
+            Paragraph("<b>Level: " + str(student.level or "") + "</b>", styles["Normal"]),
         ],
     ]
     tbl = Table(tbl_data)
@@ -718,7 +708,7 @@ def course_registration_form(request):
         + str(request.user.get_full_name.upper())
         + "</b>\
     has been duly registered for the <b>"
-        + student.level
+        + str(student.level or "")
         + " level </b> of study in the department\
     of COMPUTER SICENCE & ENGINEERING and that the courses and credits \
     registered are as approved by the senate of the University"
@@ -728,17 +718,24 @@ def course_registration_form(request):
 
     # FIRST SEMESTER ENDS HERE
 
-    logo = settings.STATICFILES_DIRS[0] + "/img/brand.png"
-    im_logo = Image(logo, 1 * inch, 1 * inch)
-    setattr(im_logo, "_offs_x", -218)
-    setattr(im_logo, "_offs_y", 480)
-    Story.append(im_logo)
+    logo = os.path.join(settings.STATICFILES_DIRS[0], "img", "brand.png")
+    if os.path.exists(logo):
+        im_logo = Image(logo, 1 * inch, 1 * inch)
+        setattr(im_logo, "_offs_x", -218)
+        setattr(im_logo, "_offs_y", 480)
+        Story.append(im_logo)
 
-    picture = settings.BASE_DIR + request.user.get_picture()
-    im = Image(picture, 1.0 * inch, 1.0 * inch)
-    setattr(im, "_offs_x", 218)
-    setattr(im, "_offs_y", 550)
-    Story.append(im)
+    picture = ""
+    try:
+        if request.user.picture:
+            picture = request.user.picture.path
+    except Exception:
+        picture = ""
+    if picture and os.path.exists(picture):
+        im = Image(picture, 1.0 * inch, 1.0 * inch)
+        setattr(im, "_offs_x", 218)
+        setattr(im, "_offs_y", 550)
+        Story.append(im)
 
     doc.build(Story)
     fs = FileSystemStorage(settings.MEDIA_ROOT + "/registration_form")
