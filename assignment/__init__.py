@@ -1,0 +1,3 @@
+"""
+Assignment app package initialization.
+"""
