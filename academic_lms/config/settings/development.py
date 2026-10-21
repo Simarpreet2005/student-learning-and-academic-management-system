@@ -1,7 +1,9 @@
 """Development settings for Academic LMS project."""
 from .base import *
 
-DEBUG = config("DEBUG", default=True, cast=bool)
+# Keep detailed tracebacks out of browser responses by default. Set DEBUG=True
+# explicitly when troubleshooting locally.
+DEBUG = config("DEBUG", default=False, cast=bool)
 
 # SQLite Database for local development
 DATABASES = {

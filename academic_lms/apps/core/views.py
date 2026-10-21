@@ -51,6 +51,11 @@ def index_view(request: HttpRequest) -> HttpResponse:
     return render(request, "core/index.html", context)
 
 
+def server_error_view(request: HttpRequest) -> HttpResponse:
+    """Show a user-friendly message without exposing a traceback."""
+    return render(request, "500.html", status=500)
+
+
 def dev_showcase_view(request: HttpRequest) -> HttpResponse:
     """Developer design-system and component showcase view (development use only)."""
     context = {

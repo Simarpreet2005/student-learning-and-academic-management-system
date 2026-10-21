@@ -19,6 +19,7 @@ urlpatterns = [
 ]
 
 handler403 = "apps.accounts.views.access_denied_view"
+handler500 = "apps.core.views.server_error_view"
 
 
 # Serve media and static files in development mode

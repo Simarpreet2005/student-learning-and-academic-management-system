@@ -473,6 +473,16 @@ input[type="radio"] {
   justify-content: flex-start;
 }
 
+/* The general text-field rule also matches submit inputs. Keep save controls
+   readable after Django's later admin form styles are applied. */
+#content .submit-row input[type="submit"],
+#content .submit-row input[type="button"],
+#content .submit-row .button,
+#content .object-tools a,
+#content .deletelink {
+  color: var(--color-text-inverse);
+}
+
 @media (max-width: 900px) {
   #content {
     padding: 1.25rem 1rem 2rem;
