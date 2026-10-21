@@ -1,0 +1,431 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Dashboard | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4">
+
+  <!-- Page Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h1 class="h3 fw-bold mb-1" style="color: var(--color-primary-espresso);">
+        <i class="fa-solid fa-user-graduate me-2"></i>Student Dashboard
+      </h1>
+      <p class="text-muted mb-0">Welcome back, {{ request.user.get_full_name|default:request.user.email }}. Monitor your academic deliverables, progress, and schedule.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'planner:dashboard' %}" class="btn btn-espresso btn-sm">
+        <i class="fa-solid fa-compass-drafting me-1"></i> Workload Planner
+      </a>
+      <a href="{% url 'core:calendar' %}" class="btn btn-outline-academic btn-sm">
+        <i class="fa-solid fa-calendar-days me-1"></i> Academic Calendar
+      </a>
+      <a href="{% url 'accounts:profile' %}" class="btn btn-outline-academic btn-sm">
+        <i class="fa-solid fa-id-card me-1"></i> My Profile
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI / Overview Highlights -->
+  <div class="row g-3 mb-4">
+    <!-- Enrolled Courses -->
+    <div class="col-sm-6 col-xl-3">
+      <div class="card card-academic h-100 shadow-sm">
+        <div class="card-body card-body-academic d-flex align-items-center gap-3">
+          <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:50px;height:50px;background:linear-gradient(135deg,var(--color-primary-espresso),var(--color-primary-saddle));">
+            <i class="fa-solid fa-book-open fa-lg text-white"></i>
+          </div>
+          <div>
+            <div class="h3 fw-bold mb-0" style="color: var(--color-primary-espresso);">{{ enrolled_courses_count }}</div>
+            <div class="small text-muted">Enrolled Courses</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Deliverables -->
+    <div class="col-sm-6 col-xl-3">
+      <div class="card card-academic h-100 shadow-sm">
+        <div class="card-body card-body-academic d-flex align-items-center gap-3">
+          <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:50px;height:50px;background:linear-gradient(135deg,#2C6E49,#52B788);">
+            <i class="fa-solid fa-clock fa-lg text-white"></i>
+          </div>
+          <div>
+            <div class="h3 fw-bold mb-0" style="color: #2C6E49;">
+              {% if workload %}{{ workload.total_pending_tasks }}{% else %}{{ upcoming_assignments|length|add:upcoming_quizzes|length }}{% endif %}
+            </div>
+            <div class="small text-muted">Upcoming Deliverables</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workload Status -->
+    <div class="col-sm-6 col-xl-3">
+      <div class="card card-academic h-100 shadow-sm">
+        <div class="card-body card-body-academic d-flex align-items-center gap-3">
+          <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:50px;height:50px;background:linear-gradient(135deg,#D97706,#F59E0B);">
+            <i class="fa-solid fa-gauge-high fa-lg text-white"></i>
+          </div>
+          <div>
+            <div class="fw-bold mb-0" style="font-size: 1.15rem; color: var(--color-primary-espresso);">
+              {% if workload %}
+                <span class="badge {{ workload.workload_badge_class }}">{{ workload.workload_label }}</span>
+              {% else %}
+                <span class="badge bg-secondary">Balanced</span>
+              {% endif %}
+            </div>
+            <div class="small text-muted">Workload Level</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Completed Submissions / Results -->
+    <div class="col-sm-6 col-xl-3">
+      <div class="card card-academic h-100 shadow-sm">
+        <div class="card-body card-body-academic d-flex align-items-center gap-3">
+          <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:50px;height:50px;background:linear-gradient(135deg,#7D3C98,#A569BD);">
+            <i class="fa-solid fa-award fa-lg text-white"></i>
+          </div>
+          <div>
+            <div class="h3 fw-bold mb-0" style="color: #7D3C98;">
+              {{ recent_submissions|length|add:recent_quiz_results|length }}
+            </div>
+            <div class="small text-muted">Recent Evaluated Works</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: Workload Planner & Deliverables -->
+    <div class="col-lg-8">
+
+      <!-- Workload Planner Recommendation Widget -->
+      <div class="card card-academic shadow-sm mb-4">
+        <div class="card-header-academic d-flex align-items-center justify-content-between">
+          <span><i class="fa-solid fa-compass-drafting me-2"></i>Smart Academic Workload Planner</span>
+          <a href="{% url 'planner:dashboard' %}" class="btn btn-outline-academic btn-sm">Full Planner View &raquo;</a>
+        </div>
+        <div class="card-body card-body-academic">
+          {% if workload %}
+            <div class="alert mb-3" style="background-color: var(--color-bg-subtle); border-left: 3px solid var(--color-primary-saddle);">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div>
+                  <strong>Workload Assessment:</strong> {{ workload.workload_description }}
+                </div>
+                <span class="badge {{ workload.workload_badge_class }}">{{ workload.workload_label }}</span>
+              </div>
+            </div>
+
+            <!-- Overlapping Clusters Warning if any -->
+            {% if workload.clusters %}
+              <div class="alert alert-warning mb-3 py-2 px-3 small">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                <strong>Deadline Clash:</strong> {{ workload.clusters.0.description }}
+              </div>
+            {% endif %}
+
+            <!-- Priority Upcoming Deliverables -->
+            <h6 class="fw-bold mb-2 small text-uppercase text-muted">Priority Task Queue</h6>
+            {% if workload.prioritized_tasks %}
+              <div class="list-group list-group-flush border rounded-2 mb-3">
+                {% for task in workload.prioritized_tasks|slice:":4" %}
+                  <div class="list-group-item d-flex align-items-center justify-content-between py-2 px-3">
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="badge {% if task.priority_level == 'CRITICAL' %}bg-danger{% elif task.priority_level == 'HIGH' %}bg-warning text-dark{% elif task.priority_level == 'MEDIUM' %}bg-info text-dark{% else %}bg-secondary{% endif %}">
+                        {{ task.priority_level }}
+                      </span>
+                      <div>
+                        <div class="fw-semibold small text-truncate" style="max-width: 320px;">
+                          {{ task.title }}
+                        </div>
+                        <div class="text-muted" style="font-size: 0.75rem;">
+                          {{ task.course_code }} &bull; Due: {{ task.deadline|date:"M d, H:i"|default:"Self-paced" }}
+                          {% if task.estimated_effort_hours %}&bull; ~{{ task.estimated_effort_hours }}h effort{% endif %}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      {% if task.task_type == 'QUIZ' %}
+                        <a href="{% url 'quizzes:quiz_detail' task.source_id %}" class="btn btn-outline-academic btn-sm py-0 px-2" style="font-size: 0.75rem;">
+                          Take Quiz
+                        </a>
+                      {% else %}
+                        <a href="{% url 'planner:dashboard' %}" class="btn btn-outline-academic btn-sm py-0 px-2" style="font-size: 0.75rem;">
+                          Plan Task
+                        </a>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="text-center py-3 text-muted small">
+                <i class="fa-solid fa-circle-check text-success fa-lg mb-1"></i><br>
+                All clear! No pending deliverables require immediate attention.
+              </div>
+            {% endif %}
+
+          {% else %}
+            <div class="text-muted small">No active workload data available. Enroll in courses to start receiving prioritized task schedules.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Upcoming Assignments & Quizzes -->
+      <div class="card card-academic shadow-sm mb-4">
+        <div class="card-header-academic d-flex align-items-center justify-content-between">
+          <span><i class="fa-solid fa-list-check me-2"></i>Upcoming Deliverables</span>
+          <span class="badge badge-academic">{{ upcoming_assignments|length|add:upcoming_quizzes|length }} Active</span>
+        </div>
+        <div class="card-body card-body-academic p-0">
+          <div class="table-responsive">
+            <table class="table table-academic mb-0 small">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Title &amp; Course</th>
+                  <th>Deadline / Window</th>
+                  <th>Effort / Length</th>
+                  <th class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for assignment in upcoming_assignments %}
+                  <tr>
+                    <td><span class="badge bg-primary">Assignment</span></td>
+                    <td>
+                      <div class="fw-semibold">{{ assignment.title }}</div>
+                      <div class="text-muted">{{ assignment.course.code }} &bull; {{ assignment.course.title }}</div>
+                    </td>
+                    <td>
+                      <span class="text-dark fw-semibold">{{ assignment.due_date|date:"M d, Y H:i" }}</span>
+                    </td>
+                    <td>
+                      {% if assignment.estimated_effort_hours %}
+                        <span class="badge bg-light text-dark border">{{ assignment.estimated_effort_hours }}h effort</span>
+                      {% else %}
+                        <span class="text-muted">—</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-center">
+                      <a href="{% url 'planner:dashboard' %}" class="btn btn-outline-academic btn-sm py-0 px-2">
+                        Plan
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+                {% for quiz in upcoming_quizzes %}
+                  <tr>
+                    <td><span class="badge bg-success">Quiz</span></td>
+                    <td>
+                      <div class="fw-semibold">{{ quiz.title }}</div>
+                      <div class="text-muted">{{ quiz.course.code }} &bull; {{ quiz.course.title }}</div>
+                    </td>
+                    <td>
+                      <span class="text-dark fw-semibold">{{ quiz.available_to|date:"M d, Y H:i" }}</span>
+                    </td>
+                    <td>
+                      <span class="badge bg-light text-dark border">{{ quiz.duration_minutes }} mins</span>
+                    </td>
+                    <td class="text-center">
+                      <a href="{% url 'quizzes:quiz_detail' quiz.pk %}" class="btn btn-espresso btn-sm py-0 px-2">
+                        Attempt
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+                {% if not upcoming_assignments and not upcoming_quizzes %}
+                  <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                      <i class="fa-solid fa-calendar-check fa-2x mb-2 text-muted"></i>
+                      <p class="mb-0">No upcoming assignments or quizzes due at this time.</p>
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Submissions & Quiz Results -->
+      <div class="card card-academic shadow-sm mb-4">
+        <div class="card-header-academic d-flex align-items-center justify-content-between">
+          <span><i class="fa-solid fa-award me-2"></i>Recent Submissions &amp; Score Slips</span>
+        </div>
+        <div class="card-body card-body-academic p-0">
+          <div class="table-responsive">
+            <table class="table table-academic mb-0 small">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Course</th>
+                  <th>Submitted At</th>
+                  <th>Status</th>
+                  <th>Score</th>
+                  <th class="text-center">Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for sub in recent_submissions %}
+                  <tr>
+                    <td class="fw-semibold">{{ sub.assignment.title }}</td>
+                    <td>{{ sub.assignment.course.code }}</td>
+                    <td class="text-muted">{{ sub.submitted_at|date:"M d, Y H:i" }}</td>
+                    <td>
+                      <span class="badge {% if sub.status == 'GRADED' %}bg-success{% elif sub.status == 'LATE' %}bg-danger{% else %}bg-secondary{% endif %}">
+                        {{ sub.get_status_display }}
+                      </span>
+                    </td>
+                    <td class="fw-bold">
+                      {% if sub.score is not None %}
+                        {{ sub.score }} / {{ sub.assignment.maximum_marks }}
+                      {% else %}
+                        <span class="text-muted">Pending</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-center">
+                      <span class="badge bg-light text-dark border">Recorded</span>
+                    </td>
+                  </tr>
+                {% endfor %}
+                {% for attempt in recent_quiz_results %}
+                  <tr>
+                    <td class="fw-semibold">{{ attempt.quiz.title }}</td>
+                    <td>{{ attempt.quiz.course.code }}</td>
+                    <td class="text-muted">{{ attempt.submitted_at|date:"M d, Y H:i"|default:attempt.started_at|date:"M d, Y H:i" }}</td>
+                    <td><span class="badge bg-success">Completed</span></td>
+                    <td class="fw-bold text-success">
+                      {{ attempt.score_obtained }} / {{ attempt.total_marks }}
+                      <span class="text-muted fw-normal">({{ attempt.percentage }}%)</span>
+                    </td>
+                    <td class="text-center">
+                      <a href="{% url 'quizzes:quiz_result' attempt.pk %}" class="btn btn-outline-academic btn-sm py-0 px-2">
+                        Score Slip
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+                {% if not recent_submissions and not recent_quiz_results %}
+                  <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                      <i class="fa-solid fa-inbox fa-2x mb-2 text-muted"></i>
+                      <p class="mb-0">No past submissions or completed quiz records found.</p>
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Courses, Resources & Calendar Events -->
+    <div class="col-lg-4">
+
+      <!-- Enrolled Courses -->
+      <div class="card card-academic shadow-sm mb-4">
+        <div class="card-header-academic d-flex align-items-center justify-content-between">
+          <span><i class="fa-solid fa-graduation-cap me-2"></i>Enrolled Courses</span>
+          <span class="badge badge-academic">{{ enrollments|length }}</span>
+        </div>
+        <div class="card-body card-body-academic p-0">
+          {% if enrollments %}
+            <div class="list-group list-group-flush">
+              {% for enroll in enrollments %}
+                <div class="list-group-item py-3 px-3">
+                  <div class="d-flex align-items-center justify-content-between mb-1">
+                    <span class="fw-bold" style="color:var(--color-primary-espresso);">{{ enroll.course.code }}</span>
+                    <span class="badge badge-academic" style="background:var(--color-bg-subtle);color:var(--color-primary-saddle);">
+                      {{ enroll.course.credits }} Credits
+                    </span>
+                  </div>
+                  <div class="small fw-semibold text-truncate mb-1">{{ enroll.course.title }}</div>
+                  <div class="d-flex align-items-center justify-content-between small text-muted">
+                    <span>{{ enroll.course.department.name|default:"General" }}</span>
+                    <span>{{ enroll.semester.name|default:"Current Session" }}</span>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-4 text-muted small px-3">
+              <i class="fa-solid fa-book-bookmark fa-2x mb-2 text-muted"></i>
+              <p class="mb-0">You are not currently enrolled in any active courses.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Published Learning Resources -->
+      <div class="card card-academic shadow-sm mb-4">
+        <div class="card-header-academic d-flex align-items-center justify-content-between">
+          <span><i class="fa-solid fa-book-open-reader me-2"></i>Recent Materials</span>
+          <a href="{% url 'courseware:resource_list' %}" class="btn btn-outline-academic btn-sm">All &raquo;</a>
+        </div>
+        <div class="card-body card-body-academic p-0">
+          {% if recent_resources %}
+            <div class="list-group list-group-flush">
+              {% for res in recent_resources %}
+                <a href="{% url 'courseware:resource_detail' res.pk %}" class="list-group-item list-group-item-action py-2 px-3 small">
+                  <div class="fw-semibold text-dark text-truncate">{{ res.title }}</div>
+                  <div class="text-muted" style="font-size:0.75rem;">
+                    {{ res.course.code }} &bull; {{ res.get_resource_type_display }} &bull; {{ res.created_at|date:"M d" }}
+                  </div>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-3 text-muted small px-3">
+              No learning materials published for your courses yet.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Academic Calendar Events -->
+      <div class="card card-academic shadow-sm mb-4">
+        <div class="card-header-academic d-flex align-items-center justify-content-between">
+          <span><i class="fa-solid fa-calendar-days me-2"></i>Academic Calendar</span>
+          <a href="{% url 'core:calendar' %}" class="btn btn-outline-academic btn-sm">View Calendar &raquo;</a>
+        </div>
+        <div class="card-body card-body-academic p-0">
+          {% if upcoming_events %}
+            <div class="list-group list-group-flush">
+              {% for evt in upcoming_events %}
+                <div class="list-group-item py-2 px-3 small">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <span class="badge bg-secondary mb-1" style="font-size: 0.7rem;">{{ evt.get_event_type_display }}</span>
+                    <span class="text-muted" style="font-size: 0.75rem;">{{ evt.start_date|date:"M d, Y" }}</span>
+                  </div>
+                  <div class="fw-semibold text-dark">{{ evt.title }}</div>
+                  {% if evt.location %}
+                    <div class="text-muted" style="font-size: 0.75rem;"><i class="fa-solid fa-location-dot me-1"></i>{{ evt.location }}</div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-3 text-muted small px-3">
+              No institutional events scheduled for this period.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock content %}

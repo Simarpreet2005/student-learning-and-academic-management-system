@@ -26,6 +26,8 @@
 		{% url 'course_registration' as cr %} {% url 'edit_profile' as ep %} {% url 'change_password' as cp %}
 		{% url 'quiz_progress' as qpr %} {% url 'quiz_marking' as qce %} {% url 'user_course_list' as ucl %}
 		{% url 'admin_panel' as admin_p %}
+		{% url 'user_assignments' as uas %}
+		{% url 'notification_list' as notif_url %}
 		
 
 
@@ -37,6 +39,9 @@
 			{% endif %}
 			<li class="{% if request.path == hom %}active{% endif %}">
 				<a href="{% url 'home' %}"><i class="fas fa-home"></i>{% trans 'Home' %}</a>
+			</li>
+			<li class="{% if request.path == notif_url %}active{% endif %}">
+				<a href="{% url 'notification_list' %}"><i class="fas fa-bell"></i>{% trans 'Notifications' %}{% if unread_notifications_count > 0 %} <span class="badge bg-danger ms-auto" style="font-size: 10px;">{{ unread_notifications_count }}</span>{% endif %}</a>
 			</li>
 			<li class="{% if request.path == prof %}active{% endif %}">
 				<a href="{% url 'profile' %}"><i class="fas fa-user"></i>{% trans 'Profile' %}</a>
@@ -54,9 +59,12 @@
 			</li>
 			{% endif %}
 
-			{% if request.user.is_lecturer or request.user.is_student %}
+			{% if request.user.is_superuser or request.user.is_lecturer or request.user.is_student %}
 			<li class="{% if request.path == ucl %}active{% endif %}">
 				<a href="{% url 'user_course_list' %}"><i class="fas fa-book"></i>{% trans 'My Courses' %}</a>
+			</li>
+			<li class="{% if request.path == uas %}active{% endif %}">
+				<a href="{% url 'user_assignments' %}"><i class="fas fa-tasks"></i>{% trans 'Assignments' %}</a>
 			</li>
 			{% endif %}
 

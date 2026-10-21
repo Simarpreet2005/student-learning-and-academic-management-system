@@ -1,0 +1,4 @@
+academic_lms/README.md:191: new blank line at EOF.
+academic_lms/config/settings/production.py:65: new blank line at EOF.
+academic_lms/templates/planner/dashboard.html:176: trailing whitespace.
+[32m+[m[32m                            <span class="text-muted">Available:</span> <strong>{{ day.available_hours }}h</strong> |[m[41m [m

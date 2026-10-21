@@ -15,6 +15,17 @@
 				</button>
 			</form>
 
+			<div class="me-3">
+				<a href="{% url 'notification_list' %}" class="btn btn-light position-relative text-dark rounded-circle p-2" title="{% trans 'Notifications' %}" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
+					<i class="fas fa-bell"></i>
+					{% if unread_notifications_count > 0 %}
+					<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 10px;">
+						{{ unread_notifications_count }}
+					</span>
+					{% endif %}
+				</a>
+			</div>
+
 			<div class="dropdown">
 				<div class="avatar border border-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
 					<img src="{{ request.user.picture.url }}">
@@ -32,7 +43,10 @@
 
 					{% if request.user.is_lecturer or request.user.is_student %}
 					<a class="dropdown-item" href="{% url 'user_course_list' %}"><i class="fas fa-book me-2"></i>{% trans 'My Courses' %}</a>
+					<a class="dropdown-item" href="{% url 'user_assignments' %}"><i class="fas fa-tasks me-2"></i>{% trans 'Assignments' %}</a>
 					{% endif %}
+
+					<a class="dropdown-item" href="{% url 'notification_list' %}"><i class="fas fa-bell me-2"></i>{% trans 'Notifications' %}{% if unread_notifications_count > 0 %} <span class="badge bg-danger ms-1">{{ unread_notifications_count }}</span>{% endif %}</a>
 
 					{% if request.user.is_superuser %}
 					<a class="dropdown-item" href="{% url 'admin_panel' %}"><i class="fas fa-user-tie me-2"></i>{% trans 'Admin Panel' %}</a>

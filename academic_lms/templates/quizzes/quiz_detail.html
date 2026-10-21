@@ -1,0 +1,396 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ quiz.title }} | Quizzes | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-lg-4">
+
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'quizzes:quiz_list' %}">Quizzes</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ quiz.title|truncatechars:30 }}</li>
+    </ol>
+  </nav>
+
+  <!-- Page Header & Action Bar -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge" style="background-color: var(--color-primary-espresso); color: #fff;">
+          {{ quiz.course.code }}
+        </span>
+        {% if quiz.status == 'PUBLISHED' %}
+          {% if quiz.is_available_now %}
+            <span class="badge bg-success"><i class="fa-solid fa-circle-check me-1"></i> Open &amp; Available</span>
+          {% elif quiz.is_upcoming %}
+            <span class="badge bg-info text-dark"><i class="fa-solid fa-clock me-1"></i> Upcoming</span>
+          {% else %}
+            <span class="badge bg-secondary"><i class="fa-solid fa-lock me-1"></i> Closed</span>
+          {% endif %}
+        {% elif quiz.status == 'DRAFT' %}
+          <span class="badge bg-warning text-dark"><i class="fa-solid fa-pen-ruler me-1"></i> Draft</span>
+        {% else %}
+          <span class="badge bg-secondary">Archived</span>
+        {% endif %}
+      </div>
+      <h1 class="h3 fw-bold mb-1" style="color: var(--color-primary-espresso);">{{ quiz.title }}</h1>
+      <p class="text-muted mb-0">{{ quiz.course.title }} &bull; Created by {{ quiz.creator.get_full_name|default:quiz.creator.username }}</p>
+    </div>
+
+    <!-- Top Action Buttons -->
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      {% if can_manage %}
+        <a href="{% url 'quizzes:question_manage' pk=quiz.pk %}" class="btn btn-espresso btn-sm">
+          <i class="fa-solid fa-list-ol me-1"></i> Manage Questions ({{ questions_count }})
+        </a>
+        <a href="{% url 'quizzes:course_quiz_results' quiz_pk=quiz.pk %}" class="btn btn-outline-academic btn-sm">
+          <i class="fa-solid fa-chart-simple me-1"></i> Course Results
+        </a>
+        <a href="{% url 'quizzes:quiz_edit' pk=quiz.pk %}" class="btn btn-outline-secondary btn-sm" title="Edit Quiz Settings">
+          <i class="fa-solid fa-pen-to-square"></i>
+        </a>
+        <a href="{% url 'quizzes:quiz_delete' pk=quiz.pk %}" class="btn btn-outline-danger btn-sm" title="Delete Quiz">
+          <i class="fa-solid fa-trash-can"></i>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: Parameters & Instructions -->
+    <div class="col-lg-8">
+      <!-- Quiz Specification Card -->
+      <div class="card card-academic shadow-sm mb-4">
+        <div class="card-header card-header-academic bg-transparent border-bottom py-3">
+          <h5 class="mb-0 fw-bold" style="color: var(--color-primary-espresso);">
+            <i class="fa-solid fa-circle-info me-2" style="color: var(--color-primary-saddle);"></i>
+            Assessment Specifications
+          </h5>
+        </div>
+        <div class="card-body card-body-academic">
+          <div class="row g-3">
+            <div class="col-sm-6 col-md-3">
+              <div class="p-3 rounded text-center" style="background-color: var(--color-surface-parchment);">
+                <i class="fa-solid fa-stopwatch fa-2x mb-1" style="color: var(--color-primary-mocha);"></i>
+                <div class="small text-muted">Duration</div>
+                <div class="fw-bold fs-5" style="color: var(--color-primary-espresso);">{{ quiz.duration_minutes }} mins</div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+              <div class="p-3 rounded text-center" style="background-color: var(--color-surface-parchment);">
+                <i class="fa-solid fa-award fa-2x mb-1" style="color: var(--color-primary-mocha);"></i>
+                <div class="small text-muted">Total Marks</div>
+                <div class="fw-bold fs-5" style="color: var(--color-primary-espresso);">{{ quiz.total_marks }} pts</div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+              <div class="p-3 rounded text-center" style="background-color: var(--color-surface-parchment);">
+                <i class="fa-solid fa-percent fa-2x mb-1" style="color: var(--color-primary-mocha);"></i>
+                <div class="small text-muted">Pass Mark</div>
+                <div class="fw-bold fs-5" style="color: var(--color-primary-espresso);">{{ quiz.pass_percentage }}%</div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+              <div class="p-3 rounded text-center" style="background-color: var(--color-surface-parchment);">
+                <i class="fa-solid fa-rotate-right fa-2x mb-1" style="color: var(--color-primary-mocha);"></i>
+                <div class="small text-muted">Allowed Attempts</div>
+                <div class="fw-bold fs-5" style="color: var(--color-primary-espresso);">{{ quiz.max_attempts }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Instructions & Guidelines -->
+          <h6 class="fw-bold mt-4 mb-2" style="color: var(--color-primary-espresso);">
+            <i class="fa-solid fa-book-bookmark me-1" style="color: var(--color-primary-saddle);"></i>
+            Instructions &amp; Exam Guidelines
+          </h6>
+          <div class="p-3 rounded border" style="background-color: #FAF7F2; line-height: 1.6;">
+            {% if quiz.instructions %}
+              {{ quiz.instructions|linebreaks }}
+            {% else %}
+              <p class="text-muted mb-0 italic">No specific instructions posted by the lecturer. Standard academic conduct rules apply.</p>
+            {% endif %}
+          </div>
+
+          <!-- Exam Conduct Rules -->
+          <div class="alert alert-warning mt-3 mb-0 small">
+            <i class="fa-solid fa-triangle-exclamation me-1"></i>
+            <strong>Server Time Enforcement:</strong> Once started, your quiz timer runs continuously on the institutional server. Submissions after the duration will be recorded as expired. Do not refresh or navigate away from the exam desk.
+          </div>
+        </div>
+      </div>
+
+      <!-- Student Attempt Desk / History -->
+      {% if request.user.is_student_role %}
+        <div class="card card-academic shadow-sm mb-4">
+          <div class="card-header card-header-academic bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold" style="color: var(--color-primary-espresso);">
+              <i class="fa-solid fa-user-pen me-2" style="color: var(--color-primary-saddle);"></i>
+              My Quiz Attempts
+            </h5>
+            <span class="badge bg-secondary">
+              {{ student_attempts|length }} of {{ quiz.max_attempts }} Attempt{{ quiz.max_attempts|pluralize }} Used
+            </span>
+          </div>
+          <div class="card-body card-body-academic">
+            <!-- Start / Resume Banner -->
+            {% if active_attempt %}
+              <div class="alert alert-warning d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                <div>
+                  <h6 class="fw-bold mb-1"><i class="fa-solid fa-stopwatch me-1"></i> Attempt #{{ active_attempt.attempt_number }} In Progress!</h6>
+                  <p class="small mb-0">Started on {{ active_attempt.started_at|date:"M d, H:i" }}. Timer is currently running.</p>
+                </div>
+                <a href="{% url 'quizzes:quiz_take' quiz_pk=quiz.pk attempt_pk=active_attempt.pk %}" class="btn btn-espresso btn-sm">
+                  Resume Quiz Desk <i class="fa-solid fa-arrow-right ms-1"></i>
+                </a>
+              </div>
+            {% elif can_attempt %}
+              <div class="p-3 rounded mb-3 text-center border" style="background-color: #F4EBE1;">
+                <h6 class="fw-bold mb-1" style="color: var(--color-primary-espresso);">Ready to Start Your Assessment?</h6>
+                <p class="small text-muted mb-3">
+                  You are permitted to attempt this quiz. Once you click "Begin Attempt", your {{ quiz.duration_minutes }}-minute timer will start immediately.
+                </p>
+                <form method="post" action="{% url 'quizzes:quiz_start' pk=quiz.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-espresso px-4 py-2" onclick="return confirm('Ready to start? The timer will start immediately.');">
+                    <i class="fa-solid fa-play me-2"></i> Begin Attempt #{% if student_attempts %}{{ student_attempts|length|add:1 }}{% else %}1{% endif %}
+                  </button>
+                </form>
+              </div>
+            {% else %}
+              <div class="alert alert-info small mb-3">
+                <i class="fa-solid fa-circle-info me-1"></i> {{ attempt_reason }}
+              </div>
+            {% endif %}
+
+            <!-- Past Attempts Table -->
+            {% if student_attempts %}
+              <h6 class="fw-bold mb-2 small text-muted text-uppercase">Previous Sittings</h6>
+              <div class="table-responsive">
+                <table class="table table-academic table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Attempt</th>
+                      <th>Submitted Date</th>
+                      <th>Score</th>
+                      <th>Percentage</th>
+                      <th>Status</th>
+                      <th class="text-end">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for att in student_attempts %}
+                      <tr>
+                        <td class="fw-bold">#{{ att.attempt_number }}</td>
+                        <td>{{ att.submitted_at|date:"M d, Y H:i"|default:"In Progress" }}</td>
+                        <td>
+                          {% if att.status == 'IN_PROGRESS' %}
+                            <span class="text-muted">Pending</span>
+                          {% else %}
+                            <strong>{{ att.score_obtained }}</strong> / {{ att.total_marks }}
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if att.status == 'IN_PROGRESS' %}
+                            <span class="text-muted">—</span>
+                          {% else %}
+                            <span class="fw-bold {% if att.is_passed %}text-success{% else %}text-danger{% endif %}">
+                              {{ att.percentage }}%
+                            </span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if att.status == 'COMPLETED' %}
+                            {% if att.is_passed %}
+                              <span class="badge bg-success">Passed</span>
+                            {% else %}
+                              <span class="badge bg-danger">Failed</span>
+                            {% endif %}
+                          {% elif att.status == 'SUBMITTED' %}
+                            <span class="badge bg-warning text-dark">Grading in Progress</span>
+                          {% elif att.status == 'EXPIRED' %}
+                            <span class="badge bg-secondary">Expired</span>
+                          {% else %}
+                            <span class="badge bg-info text-dark">In Progress</span>
+                          {% endif %}
+                        </td>
+                        <td class="text-end">
+                          {% if att.status != 'IN_PROGRESS' %}
+                            <a href="{% url 'quizzes:quiz_result' attempt_pk=att.pk %}" class="btn btn-outline-academic btn-sm">
+                              View Results <i class="fa-solid fa-chevron-right ms-1"></i>
+                            </a>
+                          {% else %}
+                            <a href="{% url 'quizzes:quiz_take' quiz_pk=quiz.pk attempt_pk=att.pk %}" class="btn btn-outline-primary btn-sm">
+                              Resume <i class="fa-solid fa-arrow-right ms-1"></i>
+                            </a>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Parent View: Linked Student Attempts -->
+      {% if request.user.is_parent_role %}
+        <div class="card card-academic shadow-sm mb-4">
+          <div class="card-header card-header-academic bg-transparent border-bottom py-3">
+            <h5 class="mb-0 fw-bold" style="color: var(--color-primary-espresso);">
+              <i class="fa-solid fa-children me-2" style="color: var(--color-primary-saddle);"></i>
+              Child Academic Record
+            </h5>
+          </div>
+          <div class="card-body card-body-academic">
+            {% if parent_student_attempts %}
+              <div class="table-responsive">
+                <table class="table table-academic table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Student</th>
+                      <th>Attempt</th>
+                      <th>Submitted</th>
+                      <th>Score</th>
+                      <th>Percentage</th>
+                      <th>Outcome</th>
+                      <th class="text-end">Result Slip</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for att in parent_student_attempts %}
+                      <tr>
+                        <td class="fw-semibold">{{ att.student.get_full_name }}</td>
+                        <td>#{{ att.attempt_number }}</td>
+                        <td>{{ att.submitted_at|date:"M d, Y"|default:"Pending" }}</td>
+                        <td><strong>{{ att.score_obtained }}</strong> / {{ att.total_marks }}</td>
+                        <td class="fw-bold {% if att.is_passed %}text-success{% else %}text-danger{% endif %}">
+                          {{ att.percentage }}%
+                        </td>
+                        <td>
+                          {% if att.status == 'COMPLETED' %}
+                            {% if att.is_passed %}
+                              <span class="badge bg-success">Passed</span>
+                            {% else %}
+                              <span class="badge bg-danger">Failed</span>
+                            {% endif %}
+                          {% elif att.status == 'SUBMITTED' %}
+                            <span class="badge bg-warning text-dark">Under Review</span>
+                          {% else %}
+                            <span class="badge bg-secondary">{{ att.get_status_display }}</span>
+                          {% endif %}
+                        </td>
+                        <td class="text-end">
+                          <a href="{% url 'quizzes:quiz_result' attempt_pk=att.pk %}" class="btn btn-outline-academic btn-sm">
+                            View Report <i class="fa-solid fa-chevron-right ms-1"></i>
+                          </a>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="text-center py-4 text-muted">
+                <i class="fa-solid fa-folder-open fa-2x mb-2"></i>
+                <p class="mb-0">Your linked student has not yet submitted an attempt for this quiz.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Right Column: Sidebar / Meta & Admin Info -->
+    <div class="col-lg-4">
+      <!-- Availability Window Card -->
+      <div class="card card-academic shadow-sm mb-4">
+        <div class="card-header card-header-academic bg-transparent border-bottom py-3">
+          <h6 class="mb-0 fw-bold" style="color: var(--color-primary-espresso);">
+            <i class="fa-regular fa-calendar-days me-1" style="color: var(--color-primary-saddle);"></i>
+            Availability Schedule
+          </h6>
+        </div>
+        <div class="card-body card-body-academic">
+          <div class="mb-3">
+            <span class="small text-muted d-block">Opens:</span>
+            <div class="fw-semibold">{{ quiz.available_from|date:"l, F d, Y" }}</div>
+            <div class="small text-muted">{{ quiz.available_from|date:"H:i A e" }}</div>
+          </div>
+          <div class="mb-3">
+            <span class="small text-muted d-block">Closes:</span>
+            <div class="fw-semibold">{{ quiz.available_to|date:"l, F d, Y" }}</div>
+            <div class="small text-muted">{{ quiz.available_to|date:"H:i A e" }}</div>
+          </div>
+          <hr>
+          <div class="small">
+            <div class="d-flex justify-content-between mb-1">
+              <span class="text-muted">Shuffle Questions:</span>
+              <span class="fw-semibold">{% if quiz.shuffle_questions %}Yes{% else %}No{% endif %}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+              <span class="text-muted">Shuffle Options:</span>
+              <span class="fw-semibold">{% if quiz.shuffle_options %}Yes{% else %}No{% endif %}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Answer Key Release:</span>
+              <span class="fw-semibold">{% if quiz.release_correct_answers %}Permitted{% else %}Restricted{% endif %}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Snapshot (Lecturers & Admin) -->
+      {% if can_manage and stats %}
+        <div class="card card-academic shadow-sm mb-4">
+          <div class="card-header card-header-academic bg-transparent border-bottom py-3">
+            <h6 class="mb-0 fw-bold" style="color: var(--color-primary-espresso);">
+              <i class="fa-solid fa-chart-pie me-1" style="color: var(--color-primary-saddle);"></i>
+              Course Performance Overview
+            </h6>
+          </div>
+          <div class="card-body card-body-academic">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Total Sittings:</span>
+              <span class="fw-bold">{{ stats.total_attempts }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Unique Students:</span>
+              <span class="fw-bold">{{ stats.unique_students }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Average Score:</span>
+              <span class="fw-bold">{{ stats.average_score }} ({{ stats.average_percentage }}%)</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Pass Rate:</span>
+              <span class="fw-bold text-success">{{ stats.pass_rate }}%</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Score Range:</span>
+              <span class="fw-bold">{{ stats.lowest_score }} — {{ stats.highest_score }}</span>
+            </div>
+            {% if stats.pending_manual_grading > 0 %}
+              <div class="alert alert-warning py-2 px-3 small mt-3 mb-0">
+                <i class="fa-solid fa-circle-exclamation me-1"></i>
+                <strong>{{ stats.pending_manual_grading }} attempt{{ stats.pending_manual_grading|pluralize }}</strong> require manual short-answer marking.
+              </div>
+            {% endif %}
+            <div class="mt-3">
+              <a href="{% url 'quizzes:course_quiz_results' quiz_pk=quiz.pk %}" class="btn btn-outline-academic btn-sm w-100">
+                View Full Gradebook Roster
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

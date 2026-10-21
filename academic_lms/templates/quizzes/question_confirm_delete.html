@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Question | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-lg-4">
+
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'quizzes:quiz_list' %}">Quizzes</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'quizzes:quiz_detail' pk=quiz.pk %}">{{ quiz.title }}</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'quizzes:question_manage' pk=quiz.pk %}">Questions</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Delete Question</li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+      <div class="card card-academic border-danger shadow-sm">
+        <div class="card-header bg-danger text-white py-3">
+          <h5 class="mb-0 fw-bold">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i> Confirm Question Deletion
+          </h5>
+        </div>
+        <div class="card-body card-body-academic p-4 text-center">
+          <p class="mb-3">
+            Are you sure you want to permanently delete the following question from <strong>{{ quiz.title }}</strong>?
+          </p>
+          <div class="p-3 rounded mb-4 text-start border" style="background-color: var(--color-surface-parchment);">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="badge" style="background-color: var(--color-primary-espresso); color: #fff;">Q{{ question.order }}</span>
+              <span class="badge bg-light text-dark border">{{ question.get_question_type_display }}</span>
+              <span class="badge bg-secondary">{{ question.marks }} pts</span>
+            </div>
+            <div class="fw-semibold" style="color: var(--color-primary-espresso);">{{ question.text }}</div>
+          </div>
+
+          <form method="post">
+            {% csrf_token %}
+            <div class="d-flex justify-content-center gap-2">
+              <a href="{% url 'quizzes:question_manage' pk=quiz.pk %}" class="btn btn-outline-secondary">
+                Cancel
+              </a>
+              <button type="submit" class="btn btn-danger px-4">
+                <i class="fa-solid fa-trash-can me-1"></i> Confirm Delete
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

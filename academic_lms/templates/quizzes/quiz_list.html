@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Quizzes &amp; Assessments | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-lg-4">
+
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Quizzes</li>
+    </ol>
+  </nav>
+
+  <!-- Page Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1" style="color: var(--color-primary-espresso);">
+        <i class="fa-solid fa-list-check me-2" style="color: var(--color-primary-saddle);"></i>
+        {% if request.user.is_student_role %}My Course Quizzes
+        {% elif request.user.is_parent_role %}Student Quiz Outcomes
+        {% elif request.user.is_lecturer_role %}Quiz Management Desk
+        {% else %}Institutional Quizzes &amp; Assessments{% endif %}
+      </h1>
+      <p class="text-muted mb-0">
+        {% if request.user.is_student_role %}
+          Timed tests and evaluations for your enrolled courses. Take quizzes within available windows.
+        {% elif request.user.is_parent_role %}
+          Review quiz scores, grades, and teacher feedback for your linked child.
+        {% elif request.user.is_lecturer_role %}
+          Author, configure, publish, and evaluate quizzes and questions for your allocated courses.
+        {% else %}
+          Institutional assessment catalog and performance governance.
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      {% if can_create %}
+        <a href="{% url 'quizzes:quiz_create' %}" class="btn btn-espresso btn-sm">
+          <i class="fa-solid fa-plus me-1"></i> Create New Quiz
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="card card-academic shadow-sm mb-4">
+    <div class="card-body card-body-academic py-3">
+      <form method="get" class="row g-2 align-items-end">
+        <!-- Search query -->
+        <div class="col-md-4">
+          <label class="form-label small fw-semibold text-muted mb-1">Search Quizzes</label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="fa-solid fa-magnifying-glass text-muted"></i>
+            </span>
+            <input type="text" name="q" class="form-control form-control-sm border-start-0"
+                   placeholder="Search title, course code..." value="{{ query }}">
+          </div>
+        </div>
+
+        <!-- Course filter -->
+        <div class="col-md-3 col-sm-6">
+          <label class="form-label small fw-semibold text-muted mb-1">Filter by Course</label>
+          <select name="course" class="form-select form-select-sm">
+            <option value="">All Accessible Courses</option>
+            {% for course in available_courses %}
+              <option value="{{ course.code }}" {% if selected_course|lower == course.code|lower %}selected{% endif %}>
+                {{ course.code }} — {{ course.title }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Availability filter -->
+        <div class="col-md-2 col-sm-6">
+          <label class="form-label small fw-semibold text-muted mb-1">Availability</label>
+          <select name="avail" class="form-select form-select-sm">
+            <option value="">All Windows</option>
+            <option value="open" {% if avail_filter == 'open' %}selected{% endif %}>Active / Open</option>
+            <option value="upcoming" {% if avail_filter == 'upcoming' %}selected{% endif %}>Upcoming</option>
+            <option value="concluded" {% if avail_filter == 'concluded' %}selected{% endif %}>Concluded</option>
+          </select>
+        </div>
+
+        <!-- Status filter (Lecturer & Admin) -->
+        {% if request.user.is_admin_role or request.user.is_lecturer_role %}
+        <div class="col-md-2 col-sm-6">
+          <label class="form-label small fw-semibold text-muted mb-1">Publication Status</label>
+          <select name="status" class="form-select form-select-sm">
+            <option value="">All Statuses</option>
+            {% for val, label in QuizStatus.choices %}
+              <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+
+        <!-- Submit & Clear -->
+        <div class="col-md-1 col-sm-6 d-flex gap-1">
+          <button type="submit" class="btn btn-outline-academic btn-sm w-100" title="Apply Filters">
+            <i class="fa-solid fa-filter"></i>
+          </button>
+          {% if query or selected_course or avail_filter or selected_status %}
+            <a href="{% url 'quizzes:quiz_list' %}" class="btn btn-outline-secondary btn-sm" title="Clear Filters">
+              <i class="fa-solid fa-rotate-left"></i>
+            </a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Quizzes Grid -->
+  {% if page_obj.object_list %}
+    <div class="row g-4">
+      {% for quiz in page_obj.object_list %}
+        <div class="col-md-6 col-lg-4">
+          <div class="card card-academic h-100 shadow-sm border-0 d-flex flex-column">
+            <div class="card-body card-body-academic d-flex flex-column">
+              <!-- Top Row: Course Code & Status -->
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="badge" style="background-color: var(--color-primary-espresso); color: #fff;">
+                  {{ quiz.course.code }}
+                </span>
+                <div>
+                  {% if quiz.status == 'PUBLISHED' %}
+                    {% if quiz.is_available_now %}
+                      <span class="badge bg-success"><i class="fa-solid fa-circle-check me-1"></i> Open</span>
+                    {% elif quiz.is_upcoming %}
+                      <span class="badge bg-info text-dark"><i class="fa-solid fa-clock me-1"></i> Upcoming</span>
+                    {% else %}
+                      <span class="badge bg-secondary"><i class="fa-solid fa-lock me-1"></i> Closed</span>
+                    {% endif %}
+                  {% elif quiz.status == 'DRAFT' %}
+                    <span class="badge bg-warning text-dark"><i class="fa-solid fa-pen-ruler me-1"></i> Draft</span>
+                  {% else %}
+                    <span class="badge bg-secondary">Archived</span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Title & Course -->
+              <h5 class="card-title fw-bold mb-1" style="color: var(--color-primary-espresso);">
+                <a href="{% url 'quizzes:quiz_detail' pk=quiz.pk %}" class="text-decoration-none text-reset">
+                  {{ quiz.title }}
+                </a>
+              </h5>
+              <p class="small text-muted mb-2 text-truncate">{{ quiz.course.title }}</p>
+
+              <!-- Description / Instructions snippet -->
+              <p class="small text-muted mb-3 flex-grow-1" style="min-height: 2.4rem;">
+                {{ quiz.instructions|default:"No special instructions provided."|truncatewords:15 }}
+              </p>
+
+              <!-- Quiz Metadata Box -->
+              <div class="p-2 rounded mb-3" style="background-color: var(--color-surface-parchment); font-size: 0.825rem;">
+                <div class="d-flex justify-content-between mb-1">
+                  <span class="text-muted"><i class="fa-solid fa-stopwatch me-1"></i> Duration:</span>
+                  <span class="fw-semibold">{{ quiz.duration_minutes }} mins</span>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                  <span class="text-muted"><i class="fa-solid fa-circle-question me-1"></i> Questions:</span>
+                  <span class="fw-semibold">{{ quiz.question_count }} ({{ quiz.total_marks }} marks)</span>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                  <span class="text-muted"><i class="fa-solid fa-rotate me-1"></i> Attempts:</span>
+                  <span class="fw-semibold">Max {{ quiz.max_attempts }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                  <span class="text-muted"><i class="fa-regular fa-calendar-check me-1"></i> Closes:</span>
+                  <span class="fw-semibold text-truncate ms-2">{{ quiz.available_to|date:"M d, H:i" }}</span>
+                </div>
+              </div>
+
+              <!-- Card Action Footer -->
+              <div class="mt-auto d-flex align-items-center justify-content-between pt-2 border-top">
+                <span class="small text-muted">
+                  <i class="fa-solid fa-user-tie me-1"></i> {{ quiz.creator.get_full_name|default:quiz.creator.username }}
+                </span>
+                <a href="{% url 'quizzes:quiz_detail' pk=quiz.pk %}" class="btn btn-outline-academic btn-sm">
+                  View Details <i class="fa-solid fa-chevron-right ms-1"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination Controls -->
+    {% if page_obj.has_other_pages %}
+      <nav aria-label="Quiz page navigation" class="mt-4">
+        <ul class="pagination pagination-sm justify-content-center">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if avail_filter %}&avail={{ avail_filter }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">
+                &laquo; Prev
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">&laquo; Prev</span></li>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if avail_filter %}&avail={{ avail_filter }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">
+                  {{ num }}
+                </a>
+              </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if avail_filter %}&avail={{ avail_filter }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">
+                Next &raquo;
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+
+  {% else %}
+    <!-- Empty State -->
+    <div class="card card-academic shadow-sm py-5 text-center my-4">
+      <div class="card-body">
+        <div class="d-inline-flex p-3 rounded-circle mb-3" style="background-color: var(--color-surface-parchment);">
+          <i class="fa-solid fa-list-check fa-3x" style="color: var(--color-primary-mocha);"></i>
+        </div>
+        <h4 class="fw-bold mb-2" style="color: var(--color-primary-espresso);">No Quizzes Found</h4>
+        <p class="text-muted mx-auto" style="max-width: 480px;">
+          {% if query or selected_course or avail_filter or selected_status %}
+            No quizzes matched your selected filter criteria. Try adjusting your query or resetting filters.
+          {% else %}
+            {% if request.user.is_student_role %}
+              There are currently no active or published quizzes scheduled for your enrolled courses.
+            {% elif request.user.is_parent_role %}
+              No quiz records are currently available for your linked student(s).
+            {% else %}
+              You haven't authored any quizzes yet. Click "Create New Quiz" to start setting up assessments.
+            {% endif %}
+          {% endif %}
+        </p>
+        {% if query or selected_course or avail_filter or selected_status %}
+          <a href="{% url 'quizzes:quiz_list' %}" class="btn btn-outline-academic btn-sm mt-2">
+            <i class="fa-solid fa-rotate-left me-1"></i> Reset Filters
+          </a>
+        {% elif can_create %}
+          <a href="{% url 'quizzes:quiz_create' %}" class="btn btn-espresso btn-sm mt-2">
+            <i class="fa-solid fa-plus me-1"></i> Create First Quiz
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

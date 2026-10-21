@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Workload Observer: {{ student.get_full_name }} | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'accounts:parent_dashboard' %}" class="text-espresso text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Student Workload</li>
+                </ol>
+            </nav>
+            <h1 class="h2 text-espresso fw-bold mb-1">
+                <i class="fa-solid fa-eye text-caramel me-2"></i>Academic Workload: {{ student.get_full_name }}
+            </h1>
+            <p class="text-muted small mb-0">
+                <span class="badge bg-subtle text-espresso border me-1">Authorized Parent Observer</span>
+                Read-only inspection of academic deliverables, deadline clusters, and workload pressure rating.
+            </p>
+        </div>
+        {% if other_children|length > 1 %}
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-espresso btn-sm dropdown-toggle shadow-sm" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa-solid fa-users me-1"></i>Switch Linked Student
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                    {% for rel in other_children %}
+                    <li>
+                        <a class="dropdown-item {% if rel.student.id == student.id %}active bg-espresso{% endif %}" href="{% url 'planner:student_workload' rel.student.id %}">
+                            {{ rel.student.get_full_name }} ({{ rel.get_relationship_type_display }})
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Workload Status Card -->
+    <div class="card card-academic border-0 shadow-sm mb-4" style="border-top: 4px solid {% if summary.workload_level == 'CONFLICT' %}var(--color-status-danger){% elif summary.workload_level == 'HEAVY' %}var(--color-status-warning){% elif summary.workload_level == 'MODERATE' %}var(--color-status-info){% else %}var(--color-status-success){% endif %};">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge {{ summary.workload_badge_class }} px-3 py-2 fs-6">
+                            <i class="fa-solid {% if summary.workload_level == 'CONFLICT' %}fa-triangle-exclamation{% elif summary.workload_level == 'HEAVY' %}fa-gauge-high{% elif summary.workload_level == 'MODERATE' %}fa-gauge{% else %}fa-circle-check{% endif %} me-1"></i>
+                            {{ summary.workload_label }} Workload Rating
+                        </span>
+                        {% if summary.is_configured and summary.utilization_percentage is not None %}
+                        <span class="badge bg-subtle text-espresso border px-3 py-2">
+                            {{ summary.utilization_percentage }}% Study Hours Utilization
+                        </span>
+                        {% endif %}
+                    </div>
+                    <p class="lead fs-6 text-espresso mb-0">
+                        {{ summary.workload_description }}
+                    </p>
+                </div>
+                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                    <div class="d-inline-flex gap-3 text-center">
+                        <div class="p-2 px-3 bg-subtle rounded border">
+                            <div class="h4 mb-0 fw-bold text-espresso">{{ summary.tasks_next_7_days }}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Due in 7 Days</div>
+                        </div>
+                        <div class="p-2 px-3 bg-subtle rounded border">
+                            <div class="h4 mb-0 fw-bold text-espresso">{{ summary.total_known_effort_hours }}h</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Required Effort</div>
+                        </div>
+                        <div class="p-2 px-3 bg-subtle rounded border">
+                            <div class="h4 mb-0 fw-bold {% if summary.clusters %}text-terracotta{% else %}text-espresso{% endif %}">
+                                {{ summary.clusters|length }}
+                            </div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Deadline Clusters</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cluster Warnings (if any) -->
+    {% if summary.clusters %}
+    <div class="alert alert-warning border-0 shadow-sm mb-4 p-3 rounded-3" style="background-color: #FFF8E7; border-left: 5px solid var(--color-status-warning) !important;">
+        <h6 class="fw-bold mb-1 text-espresso">
+            <i class="fa-solid fa-layer-group text-warning me-2"></i>{{ summary.clusters|length }} Deadline Cluster(s) Detected
+        </h6>
+        <p class="small mb-0 text-muted">
+            Your linked student has deliverables with close deadlines (&le;48 hours apart). Encouraging early preparation for these items can help avoid last-minute rush.
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Prioritized Upcoming Tasks Table -->
+    <div class="card card-academic border-0 shadow-sm mb-4">
+        <div class="card-header bg-subtle py-3 border-bottom d-flex align-items-center justify-content-between">
+            <h5 class="card-title text-espresso fw-bold mb-0">
+                <i class="fa-solid fa-list-ol text-caramel me-2"></i>Upcoming Deliverables & Priorities
+            </h5>
+            <span class="badge bg-subtle text-espresso border">{{ summary.total_pending_tasks }} Pending Task{{ summary.total_pending_tasks|pluralize }}</span>
+        </div>
+        <div class="card-body p-0">
+            {% if summary.prioritized_tasks %}
+            <div class="table-responsive">
+                <table class="table table-hover table-academic mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Priority Tier</th>
+                            <th style="width: 30%;">Deliverable & Course</th>
+                            <th style="width: 25%;">Deadline</th>
+                            <th style="width: 30%;">Pacing Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in summary.prioritized_tasks %}
+                        <tr>
+                            <td>
+                                {% if t.priority_level == 'OVERDUE' %}
+                                <span class="badge badge-academic-danger px-2 py-1">OVERDUE</span>
+                                {% elif t.priority_level == 'CRITICAL' %}
+                                <span class="badge badge-academic-danger px-2 py-1">CRITICAL</span>
+                                {% elif t.priority_level == 'HIGH' %}
+                                <span class="badge badge-academic-warning px-2 py-1">HIGH</span>
+                                {% elif t.priority_level == 'MEDIUM' %}
+                                <span class="badge badge-academic-info px-2 py-1">MEDIUM</span>
+                                {% else %}
+                                <span class="badge badge-academic-success px-2 py-1">LOW</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="fw-bold text-espresso">{{ t.title }}</div>
+                                <div class="small text-muted">
+                                    <span class="badge bg-subtle text-espresso border">{{ t.course_code }}</span> {{ t.course_title }}
+                                </div>
+                            </td>
+                            <td>
+                                {% if t.deadline %}
+                                <div class="fw-semibold text-espresso">{{ t.deadline|date:"M d, Y H:i" }}</div>
+                                <div class="small {% if t.is_overdue %}text-danger fw-bold{% elif t.days_remaining <= 1.0 %}text-danger{% else %}text-muted{% endif %}">
+                                    {% if t.is_overdue %}Passed {{ t.days_remaining|cut:"-" }} days ago{% else %}Due in {{ t.days_remaining }} days{% endif %}
+                                </div>
+                                {% else %}
+                                <span class="badge bg-subtle text-muted">Self-paced</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="small text-muted">{{ t.priority_explanation }}</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="fa-solid fa-circle-check fa-3x text-success mb-3 opacity-50"></i>
+                <h5 class="fw-bold text-espresso">No Pending Tasks</h5>
+                <p class="small text-muted mb-0">Your linked student currently has no pending assignments or quizzes.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

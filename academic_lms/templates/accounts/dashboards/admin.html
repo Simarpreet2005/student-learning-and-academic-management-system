@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Administrator Dashboard | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4">
+
+  <!-- Page Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h1 class="h3 fw-bold mb-1" style="color: var(--color-primary-espresso);">
+        <i class="fa-solid fa-gauge-high me-2"></i>Administrator Dashboard
+      </h1>
+      <p class="text-muted mb-0">System command center with institutional metrics, academic structure oversight, and activity tracking.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="/admin/" class="btn btn-outline-academic btn-sm">
+        <i class="fa-solid fa-screwdriver-wrench me-1"></i> Django Admin
+      </a>
+      <a href="{% url 'accounts:admin_relationship_create' %}" class="btn btn-outline-academic btn-sm">
+        <i class="fa-solid fa-link me-1"></i> Link Parent &amp; Student
+      </a>
+      <a href="{% url 'core:calendar' %}" class="btn btn-espresso btn-sm">
+        <i class="fa-solid fa-calendar-days me-1"></i> Academic Calendar
+      </a>
+    </div>
+  </div>
+
+  <!-- User & Role KPI Stats Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-2">
+      <div class="card card-academic h-100 shadow-sm">
+        <div class="card-body card-body-academic text-center py-3">
+          <div class="h3 fw-bold mb-0" style="color: var(--color-primary-espresso);">{{ total_users }}</div>
+          <div class="small text-muted">Total Users</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-2">
+      <div class="card card-academic h-100 shadow-sm">
+        <div class="card-body card-body-academic text-center py-3">
+          <div class="h3 fw-bold mb-0" style="color: #2C6E49;">{{ student_count }}</div>
+          <div class="small text-muted">Students</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-2">
+      <div class="card card-academic h-100 shadow-sm">
+        <div class="card-body card-body-academic text-center py-3">
+          <div class="h3 fw-bold mb-0" style="color: #1B4F72;">{{ lecturer_count }}</div>
+          <div class="small text-muted">Lecturers</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-2">
+      <div class="card card-academic h-100 shadow-sm">
+        <div class="card-body card-body-academic text-center py-3">
+          <div class="h3 fw-bold mb-0" style="color: #7D3C98;">{{ parent_count }}</div>
+          <div class="small text-muted">Parents</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-2">
+      <div class="card card-academic h-100 shadow-sm">
+        <div class="card-body card-body-academic text-center py-3">
+          <div class="h3 fw-bold mb-0" style="color: #D97706;">{{ admin_count }}</div>
+          <div class="small text-muted">Administrators</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-2">
+      <div class="card card-academic h-100 shadow-sm">
+        <div class="card-body card-body-academic text-center py-3">
+          <div class="h3 fw-bold mb-0" style="color: var(--color-primary-saddle);">{{ relationships_count }}</div>
+          <div class="small text-muted">Parent Links</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <!-- Academic Structure Overview -->
+    <div class="col-md-6 col-xl-4">
+      <div class="card card-academic shadow-sm h-100">
+        <div class="card-header-academic d-flex align-items-center justify-content-between">
+          <span><i class="fa-solid fa-sitemap me-2"></i>Academic Hierarchy</span>
+        </div>
+        <div class="card-body card-body-academic">
+          <ul class="list-group list-group-flush small">
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span><i class="fa-solid fa-building-columns me-2 text-muted"></i>Departments</span>
+              <span class="badge bg-secondary">{{ department_count }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span><i class="fa-solid fa-scroll me-2 text-muted"></i>Academic Programmes</span>
+              <span class="badge bg-secondary">{{ program_count }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span><i class="fa-solid fa-calendar me-2 text-muted"></i>Academic Sessions / Years</span>
+              <span class="badge bg-secondary">{{ academic_year_count }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span><i class="fa-solid fa-calendar-check me-2 text-muted"></i>Semesters / Terms</span>
+              <span class="badge bg-secondary">{{ semester_count }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Courses & Allocations -->
+    <div class="col-md-6 col-xl-4">
+      <div class="card card-academic shadow-sm h-100">
+        <div class="card-header-academic d-flex align-items-center justify-content-between">
+          <span><i class="fa-solid fa-graduation-cap me-2"></i>Courses &amp; Enrollments</span>
+        </div>
+        <div class="card-body card-body-academic">
+          <ul class="list-group list-group-flush small">
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span><i class="fa-solid fa-book me-2 text-muted"></i>Total Institutional Courses</span>
+              <span class="badge bg-primary">{{ course_count }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span><i class="fa-solid fa-chalkboard-user me-2 text-muted"></i>Active Lecturer Allocations</span>
+              <span class="badge bg-primary">{{ allocation_count }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span><i class="fa-solid fa-user-check me-2 text-muted"></i>Active Student Course Enrollments</span>
+              <span class="badge bg-primary">{{ enrollment_count }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assessments & Grading Activity -->
+    <div class="col-md-6 col-xl-4">
+      <div class="card card-academic shadow-sm h-100">
+        <div class="card-header-academic d-flex align-items-center justify-content-between">
+          <span><i class="fa-solid fa-chart-line me-2"></i>Assessments &amp; Grading</span>
+        </div>
+        <div class="card-body card-body-academic">
+          <ul class="list-group list-group-flush small">
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span><i class="fa-solid fa-file-pen me-2 text-muted"></i>Assignments Published</span>
+              <span class="badge bg-success">{{ assignment_count }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span><i class="fa-solid fa-file-arrow-up me-2 text-muted"></i>Assignment Submissions</span>
+              <span class="badge bg-success">{{ submission_count }} ({{ pending_assignments_count }} pending)</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span><i class="fa-solid fa-list-check me-2 text-muted"></i>Quizzes Published</span>
+              <span class="badge bg-success">{{ quiz_count }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span><i class="fa-solid fa-user-pen me-2 text-muted"></i>Quiz Attempts</span>
+              <span class="badge bg-success">{{ attempt_count }} ({{ pending_quizzes_count }} pending review)</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Administrative Quick Actions & Recent Events Row -->
+  <div class="row g-4">
+    <!-- Quick Administrative Actions -->
+    <div class="col-lg-6">
+      <div class="card card-academic shadow-sm h-100">
+        <div class="card-header-academic">
+          <i class="fa-solid fa-bolt me-2"></i>Administrative Shortcuts &amp; Operations
+        </div>
+        <div class="card-body card-body-academic">
+          <div class="d-flex flex-wrap gap-2">
+            <a href="/admin/accounts/user/" class="btn btn-outline-academic btn-sm">
+              <i class="fa-solid fa-users-gear me-1"></i> Manage Users
+            </a>
+            <a href="{% url 'accounts:admin_relationship_list' %}" class="btn btn-outline-academic btn-sm">
+              <i class="fa-solid fa-network-wired me-1"></i> Parent–Student Links
+            </a>
+            <a href="{% url 'courseware:resource_list' %}" class="btn btn-outline-academic btn-sm">
+              <i class="fa-solid fa-book-open me-1"></i> Courseware Repository
+            </a>
+            <a href="{% url 'quizzes:quiz_list' %}" class="btn btn-outline-academic btn-sm">
+              <i class="fa-solid fa-list-check me-1"></i> Quizzes &amp; Assessments
+            </a>
+            <a href="{% url 'planner:dashboard' %}" class="btn btn-outline-academic btn-sm">
+              <i class="fa-solid fa-compass-drafting me-1"></i> Workload Planner
+            </a>
+            <a href="{% url 'core:calendar' %}" class="btn btn-outline-academic btn-sm">
+              <i class="fa-solid fa-calendar-days me-1"></i> Academic Calendar
+            </a>
+            <a href="/admin/core/academicevent/add/" class="btn btn-outline-academic btn-sm">
+              <i class="fa-solid fa-calendar-plus me-1"></i> Post Academic Event
+            </a>
+            <a href="/admin/accounts/user/add/" class="btn btn-outline-academic btn-sm">
+              <i class="fa-solid fa-user-plus me-1"></i> Create User Account
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Academic Events -->
+    <div class="col-lg-6">
+      <div class="card card-academic shadow-sm h-100">
+        <div class="card-header-academic d-flex align-items-center justify-content-between">
+          <span><i class="fa-solid fa-calendar-days me-2"></i>Institutional Academic Events</span>
+          <a href="{% url 'core:calendar' %}" class="btn btn-outline-academic btn-sm">Full Calendar &raquo;</a>
+        </div>
+        <div class="card-body card-body-academic p-0">
+          {% if recent_events %}
+            <div class="list-group list-group-flush">
+              {% for evt in recent_events %}
+                <div class="list-group-item py-2 px-3 small">
+                  <div class="d-flex align-items-center justify-content-between mb-1">
+                    <span class="badge bg-secondary" style="font-size:0.7rem;">{{ evt.get_event_type_display }}</span>
+                    <span class="text-muted" style="font-size:0.75rem;">{{ evt.start_date|date:"M d, Y" }}</span>
+                  </div>
+                  <div class="fw-semibold text-dark">{{ evt.title }}</div>
+                  {% if evt.location %}
+                    <div class="text-muted" style="font-size:0.75rem;"><i class="fa-solid fa-location-dot me-1"></i>{{ evt.location }}</div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-4 text-muted small px-3">
+              No academic events recorded in the institutional calendar.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock content %}

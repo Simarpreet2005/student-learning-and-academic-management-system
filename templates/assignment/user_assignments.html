@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ title }} | {% trans 'Academic Management System' %}{% endblock title %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+    </ol>
+</nav>
+
+<div class="manage-wrap">
+    <div class="d-flex align-items-center">
+        <div>
+            <h4 class="fw-bold mb-0"><i class="fas fa-clipboard-list me-2 text-primary"></i>{{ title }}</h4>
+            <p class="text-muted small mb-0">{% trans 'Track deadlines, active assignments, submissions, and grades' %}</p>
+        </div>
+    </div>
+</div>
+
+{% include 'snippets/messages.html' %}
+
+<div class="container-fluid p-0 mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">#</th>
+                            <th>{% trans 'Course' %}</th>
+                            <th>{% trans 'Assignment Title' %}</th>
+                            <th>{% trans 'Due Date & Time' %}</th>
+                            <th>{% trans 'Max Marks' %}</th>
+                            <th>{% trans 'Assignment Status' %}</th>
+                            {% if is_student %}
+                            <th>{% trans 'Submission Status' %}</th>
+                            <th>{% trans 'Score' %}</th>
+                            {% else %}
+                            <th>{% trans 'Submissions' %}</th>
+                            <th>{% trans 'Awaiting Grading' %}</th>
+                            {% endif %}
+                            <th class="text-end pe-3">{% trans 'Action' %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in assignment_items %}
+                        <tr>
+                            <td class="ps-3">{{ forloop.counter }}</td>
+                            <td>
+                                <a href="{% url 'course_detail' item.assignment.course.slug %}" class="fw-bold text-decoration-none">
+                                    {{ item.assignment.course.code }}
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{{ item.assignment.get_absolute_url }}" class="fw-bold text-dark text-decoration-none">
+                                    <i class="fas fa-file-alt text-primary me-2"></i>{{ item.assignment.title }}
+                                </a>
+                                {% if item.assignment.file %}
+                                <span class="badge bg-light text-dark border ms-1" title="{% trans 'Has attachment' %}">
+                                    <i class="fas fa-paperclip"></i>
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="small">{{ item.assignment.due_date|date:"M d, Y h:i A" }}</span>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">{{ item.assignment.maximum_marks }} pts</span></td>
+                            <td>
+                                <span class="badge {{ item.assignment.status_badge_class }}">{{ item.assignment.status_label }}</span>
+                            </td>
+
+                            {% if is_student %}
+                            <td>
+                                {% if item.submission %}
+                                    <span class="badge {{ item.submission.status_badge_class }}">
+                                        {% if item.submission.status == 'graded' %}<i class="fas fa-check-circle me-1"></i>{% elif item.submission.is_late %}<i class="fas fa-clock me-1"></i>{% else %}<i class="fas fa-check me-1"></i>{% endif %}{{ item.submission.status_label }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary"><i class="fas fa-times-circle me-1"></i>{% trans 'Not Submitted' %}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.submission and item.submission.marks is not None %}
+                                    <strong class="text-success">{{ item.submission.marks }} / {{ item.assignment.maximum_marks }}</strong>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            {% else %}
+                            <td>
+                                <span class="badge bg-primary">{{ item.total_submissions }} submitted</span>
+                                <small class="text-muted ms-1">({{ item.total_graded }} graded)</small>
+                            </td>
+                            <td>
+                                {% if item.pending_grading > 0 %}
+                                <span class="badge bg-warning text-dark">{{ item.pending_grading }} pending</span>
+                                {% else %}
+                                <span class="badge bg-success">0 pending</span>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+
+                            <td class="text-end pe-3">
+                                <a href="{{ item.assignment.get_absolute_url }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-arrow-right me-1"></i>{% trans 'Open' %}
+                                </a>
+                                {% if is_lecturer %}
+                                <a href="{% url 'submission_list' item.assignment.slug %}" class="btn btn-sm btn-outline-success ms-1" title="{% trans 'Submissions' %}">
+                                    <i class="fas fa-users-cog"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="fas fa-clipboard-check fa-3x mb-3 text-secondary"></i>
+                                <p class="mb-0">{% trans 'No assignments found.' %}</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

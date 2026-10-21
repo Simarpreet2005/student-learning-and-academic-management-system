@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ action }} Question | {{ quiz.title }} | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-lg-4">
+
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'quizzes:quiz_list' %}">Quizzes</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'quizzes:quiz_detail' pk=quiz.pk %}">{{ quiz.title }}</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'quizzes:question_manage' pk=quiz.pk %}">Questions</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ action }} Question</li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-10 col-xl-9">
+      <div class="card card-academic shadow-sm">
+        <div class="card-header card-header-academic bg-transparent border-bottom py-3 d-flex align-items-center justify-content-between">
+          <h5 class="mb-0 fw-bold" style="color: var(--color-primary-espresso);">
+            <i class="fa-solid fa-pen-clip me-2" style="color: var(--color-primary-saddle);"></i>
+            {{ action }} Question &bull; {{ quiz.title }}
+          </h5>
+          <a href="{% url 'quizzes:question_manage' pk=quiz.pk %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Questions
+          </a>
+        </div>
+        <div class="card-body card-body-academic p-4">
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger mb-4">
+                {% for error in form.non_field_errors %}
+                  <div><i class="fa-solid fa-circle-exclamation me-1"></i> {{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <div class="row g-3">
+              <!-- Prompt text -->
+              <div class="col-12">
+                {{ form.text|as_crispy_field }}
+              </div>
+
+              <!-- Question Type, Marks, Order -->
+              <div class="col-md-5">
+                {{ form.question_type|as_crispy_field }}
+              </div>
+              <div class="col-md-4">
+                {{ form.marks|as_crispy_field }}
+                <div class="form-text small">Points awarded for a correct answer.</div>
+              </div>
+              <div class="col-md-3">
+                {{ form.order|as_crispy_field }}
+                <div class="form-text small">Display order (1, 2, 3...).</div>
+              </div>
+
+              <!-- Model Answer / Rubric -->
+              <div class="col-12" id="modelAnswerContainer">
+                {{ form.model_answer|as_crispy_field }}
+                <div class="form-text small">For Short-Answer questions, enter expected points or rubric notes used during manual grading. For objective questions, this acts as feedback.</div>
+              </div>
+            </div>
+
+            <!-- Options Section (For MCQ and True/False) -->
+            <div id="optionsSection" class="mt-4 pt-3 border-top">
+              <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                <div>
+                  <h6 class="fw-bold mb-0" style="color: var(--color-primary-espresso);">
+                    <i class="fa-solid fa-list-check me-2" style="color: var(--color-primary-saddle);"></i>
+                    Configurable Options &amp; Correct Answer
+                  </h6>
+                  <p class="small text-muted mb-0">For Multiple Choice, configure at least 2 options and check exactly one correct answer.</p>
+                </div>
+              </div>
+
+              {{ formset.management_form }}
+
+              {% if formset.non_form_errors %}
+                <div class="alert alert-danger mb-3">
+                  {% for error in formset.non_form_errors %}
+                    <div><i class="fa-solid fa-circle-exclamation me-1"></i> {{ error }}</div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+
+              <div class="table-responsive">
+                <table class="table table-academic table-bordered align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width: 55%;">Option Text</th>
+                      <th class="text-center" style="width: 20%;">Is Correct?</th>
+                      <th class="text-center" style="width: 15%;">Sort Order</th>
+                      {% if formset.can_delete %}
+                        <th class="text-center" style="width: 10%;">Delete</th>
+                      {% endif %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for opt_form in formset %}
+                      <tr>
+                        <td>
+                          {% for hidden in opt_form.hidden_fields %}{{ hidden }}{% endfor %}
+                          {{ opt_form.text }}
+                          {% if opt_form.text.errors %}
+                            <div class="text-danger small mt-1">{{ opt_form.text.errors }}</div>
+                          {% endif %}
+                        </td>
+                        <td class="text-center">
+                          <div class="form-check d-flex justify-content-center">
+                            {{ opt_form.is_correct }}
+                          </div>
+                          {% if opt_form.is_correct.errors %}
+                            <div class="text-danger small">{{ opt_form.is_correct.errors }}</div>
+                          {% endif %}
+                        </td>
+                        <td class="text-center">
+                          {{ opt_form.order }}
+                          {% if opt_form.order.errors %}
+                            <div class="text-danger small">{{ opt_form.order.errors }}</div>
+                          {% endif %}
+                        </td>
+                        {% if formset.can_delete %}
+                          <td class="text-center">
+                            {% if opt_form.instance.pk %}
+                              {{ opt_form.DELETE }}
+                            {% else %}
+                              <span class="text-muted">—</span>
+                            {% endif %}
+                          </td>
+                        {% endif %}
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex align-items-center justify-content-end gap-2 mt-4 pt-3 border-top">
+              <a href="{% url 'quizzes:question_manage' pk=quiz.pk %}" class="btn btn-outline-secondary">
+                Cancel
+              </a>
+              <button type="submit" class="btn btn-espresso px-4">
+                <i class="fa-solid fa-floppy-disk me-1"></i> Save Question
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Dynamic Option Toggle Script -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const typeSelect = document.getElementById("id_question_type");
+  const optionsSection = document.getElementById("optionsSection");
+
+  function toggleOptions() {
+    if (typeSelect) {
+      if (typeSelect.value === "SHORT_ANSWER") {
+        optionsSection.style.display = "none";
+      } else {
+        optionsSection.style.display = "block";
+      }
+    }
+  }
+
+  if (typeSelect) {
+    typeSelect.addEventListener("change", toggleOptions);
+    toggleOptions();
+  }
+});
+</script>
+{% endblock %}

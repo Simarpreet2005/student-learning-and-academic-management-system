@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="breadcrumb" class="breadcrumb-academic">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Home</a></li>
+      {% if user.is_parent_role %}
+        <li class="breadcrumb-item"><a href="{% url 'accounts:parent_dashboard' %}">Parent Portal</a></li>
+      {% elif user.is_admin_role %}
+        <li class="breadcrumb-item"><a href="{% url 'accounts:admin_dashboard' %}">Admin Dashboard</a></li>
+      {% else %}
+        <li class="breadcrumb-item"><a href="{% url 'accounts:profile' %}">Profile</a></li>
+      {% endif %}
+      <li class="breadcrumb-item active" aria-current="page">{{ student_user.get_full_name }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <!-- Student Profile Card -->
+    <div class="col-lg-4">
+      <div class="card card-academic text-center p-4">
+        <div class="brand-icon-box mx-auto mb-3" style="width: 72px; height: 72px; font-size: 2rem;">
+          <i class="fa-solid fa-user-graduate"></i>
+        </div>
+
+        <h4 class="fw-bold mb-1">{{ student_user.get_full_name }}</h4>
+        <div class="text-muted small mb-2">@{{ student_user.username }}</div>
+        <div class="font-monospace text-primary fw-semibold mb-3">{{ student_profile.student_id }}</div>
+
+        {% if relationship %}
+          <div class="alert alert-academic alert-academic-info py-2 px-3 small text-start mb-3">
+            <i class="fa-solid fa-shield-halved me-1"></i> Authorized Link:
+            <strong>{{ relationship.get_relationship_type_display }}</strong>
+          </div>
+        {% elif user.is_admin_role %}
+          <div class="badge badge-academic badge-role-admin mb-3">Administrative Access</div>
+        {% endif %}
+
+        {% if user.is_parent_role %}
+          <div class="small text-muted border-top pt-3">
+            <i class="fa-solid fa-eye me-1"></i> Parent access is strictly <strong>read-only</strong>.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Academic Information & Status -->
+    <div class="col-lg-8">
+      <div class="card card-academic mb-4">
+        <div class="card-header-academic">
+          <h5 class="mb-0"><i class="fa-solid fa-id-card-clip me-2"></i> Student Academic Information</h5>
+          <span class="badge badge-academic badge-role-student">Active Student</span>
+        </div>
+        <div class="card-body card-body-academic">
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <div class="small text-muted">Full Name</div>
+              <div class="fw-semibold">{{ student_user.get_full_name }}</div>
+            </div>
+            <div class="col-sm-6">
+              <div class="small text-muted">Institutional Student ID</div>
+              <div class="fw-semibold font-monospace">{{ student_profile.student_id }}</div>
+            </div>
+            <div class="col-sm-6">
+              <div class="small text-muted">Academic Program</div>
+              <div class="fw-semibold">{{ student_profile.program|default:"Unassigned" }}</div>
+            </div>
+            <div class="col-sm-6">
+              <div class="small text-muted">Current Semester</div>
+              <div class="fw-semibold">{{ student_profile.current_semester|default:"Not enrolled" }}</div>
+            </div>
+            <div class="col-sm-6">
+              <div class="small text-muted">Student Email</div>
+              <div class="fw-semibold">{{ student_user.email }}</div>
+            </div>
+            <div class="col-sm-6">
+              <div class="small text-muted">Student Phone</div>
+              <div class="fw-semibold">{{ student_profile.phone|default:"Not specified" }}</div>
+            </div>
+            <div class="col-sm-6">
+              <div class="small text-muted">Date of Birth</div>
+              <div class="fw-semibold">{{ student_profile.date_of_birth|default:"Not specified" }}</div>
+            </div>
+            <div class="col-sm-6">
+              <div class="small text-muted">Emergency Contact</div>
+              <div class="fw-semibold">{{ student_profile.emergency_contact|default:"None listed" }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview of Academic Management Modules (Phases 3+) -->
+      <div class="card card-academic">
+        <div class="card-header-academic">
+          <h5 class="mb-0"><i class="fa-solid fa-chart-line me-2"></i> Academic Progression Modules</h5>
+          <span class="badge badge-academic badge-status-balanced">Scheduled for Phases 3–8</span>
+        </div>
+        <div class="card-body card-body-academic">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="p-3 rounded-2" style="background-color: var(--color-bg-subtle);">
+                <div class="small text-muted fw-semibold">Attendance Rate</div>
+                <div class="fs-5 fw-bold text-dark mt-1"><i class="fa-solid fa-clipboard-user me-1 text-muted"></i> Pending Log</div>
+                <div class="small text-muted mt-1">Scheduled in Phase 8</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 rounded-2" style="background-color: var(--color-bg-subtle);">
+                <div class="small text-muted fw-semibold">Term GPA / CGPA</div>
+                <div class="fs-5 fw-bold text-dark mt-1"><i class="fa-solid fa-award me-1 text-muted"></i> Pending Grades</div>
+                <div class="small text-muted mt-1">Scheduled in Phase 7</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 rounded-2" style="background-color: var(--color-bg-subtle);">
+                <div class="small text-muted fw-semibold">Workload Pressure</div>
+                <div class="fs-5 fw-bold text-dark mt-1"><i class="fa-solid fa-calculator me-1 text-muted"></i> Heuristic Planner</div>
+                <div class="small text-muted mt-1">Scheduled in Phase 9</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Link Parent &amp; Student | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+
+      <div class="d-flex align-items-center mb-4 gap-2">
+        <a href="{% url 'accounts:admin_relationship_list' %}" class="btn btn-outline-academic btn-sm">
+          <i class="fa-solid fa-arrow-left me-1"></i> Back
+        </a>
+        <h1 class="h4 fw-bold mb-0" style="color:var(--color-primary-espresso);">
+          Link Parent &amp; Student
+        </h1>
+      </div>
+
+      <div class="card card-academic shadow-sm">
+        <div class="card-header-academic">
+          <i class="fa-solid fa-link me-2"></i>Create Parent–Student Relationship
+        </div>
+        <div class="card-body card-body-academic p-4">
+          <p class="text-muted small mb-4">
+            Select the parent and student accounts to link. Only users with the correct roles will be listed.
+          </p>
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-academic alert-academic-danger mb-3">
+                {% for error in form.non_field_errors %}
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>{{ error }}</span>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            {% for field in form %}
+              <div class="mb-3">
+                <label class="form-label-academic" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                  <div class="form-text text-muted small mt-1">{{ field.help_text }}</div>
+                {% endif %}
+                {% if field.errors %}
+                  <div class="text-danger small mt-1">
+                    {% for error in field.errors %}{{ error }}{% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" class="btn btn-espresso">
+                <i class="fa-solid fa-link me-1"></i> Create Linkage
+              </button>
+              <a href="{% url 'accounts:admin_relationship_list' %}" class="btn btn-outline-academic">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock content %}

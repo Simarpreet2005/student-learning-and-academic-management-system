@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ resource.title }} | {{ resource.course.code }} | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-lg-4">
+
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'courseware:resource_list' %}">Courseware &amp; Materials</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'courseware:resource_list' %}?course={{ resource.course.code }}">{{ resource.course.code }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ resource.title|truncatechars:35 }}</li>
+    </ol>
+  </nav>
+
+  <!-- Page Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+        <span class="badge badge-academic bg-white border fw-bold text-dark fs-6">
+          <i class="fa-solid fa-graduation-cap me-1"></i>{{ resource.course.code }}
+        </span>
+        <span class="text-muted small">— {{ resource.course.title }}</span>
+
+        {% if resource.status == 'PUBLISHED' %}
+          <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small">
+            <i class="fa-solid fa-circle-check me-1"></i>Published
+          </span>
+        {% elif resource.status == 'DRAFT' %}
+          <span class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1 small">
+            <i class="fa-solid fa-pen-ruler me-1"></i>Draft
+          </span>
+        {% else %}
+          <span class="badge bg-secondary-subtle text-secondary px-2 py-1 small">
+            <i class="fa-solid fa-box-archive me-1"></i>Archived
+          </span>
+        {% endif %}
+      </div>
+      <h1 class="h3 fw-bold mb-0" style="color: var(--color-primary-espresso);">
+        {{ resource.title }}
+      </h1>
+    </div>
+
+    <!-- Management Controls -->
+    <div class="d-flex align-items-center gap-2">
+      <a href="{% url 'courseware:resource_list' %}" class="btn btn-outline-academic btn-sm">
+        <i class="fa-solid fa-arrow-left me-1"></i> All Materials
+      </a>
+      {% if can_edit %}
+        <a href="{% url 'courseware:resource_edit' resource.pk %}" class="btn btn-outline-academic btn-sm">
+          <i class="fa-solid fa-pen-to-square me-1"></i> Edit Resource
+        </a>
+        <a href="{% url 'courseware:resource_delete' resource.pk %}" class="btn btn-outline-danger btn-sm">
+          <i class="fa-solid fa-trash-can me-1"></i> Deactivate
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Main Content Column -->
+    <div class="col-lg-8">
+      <!-- Overview Card -->
+      <div class="card card-academic shadow-sm mb-4">
+        <div class="card-header-academic py-3 px-4">
+          <h5 class="h6 fw-bold mb-0" style="color: var(--color-primary-espresso);">
+            <i class="fa-solid fa-circle-info me-2" style="color: var(--color-primary-saddle);"></i>Resource Overview
+          </h5>
+          {% if resource.module %}
+            <span class="badge badge-academic" style="background-color: var(--color-bg-subtle); color: var(--color-primary-saddle);">
+              <i class="fa-regular fa-folder me-1"></i>{{ resource.module.title }}
+            </span>
+          {% endif %}
+        </div>
+
+        <div class="card-body card-body-academic p-4">
+          {% if resource.description %}
+            <div class="mb-4">
+              <h6 class="fw-semibold text-muted small text-uppercase mb-2">Description &amp; Guidance</h6>
+              <div class="text-secondary" style="white-space: pre-line;">{{ resource.description }}</div>
+            </div>
+          {% else %}
+            <p class="text-muted small fst-italic mb-4">No detailed description was provided for this learning resource.</p>
+          {% endif %}
+
+          <!-- Attached File Section -->
+          {% if resource.has_file %}
+            <div class="p-3 rounded-3 border mb-3" style="background-color: var(--color-bg-subtle); border-color: var(--color-border-subtle) !important;">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                       style="width: 48px; height: 48px; background: white; border: 1px solid var(--color-border-subtle); font-size: 1.4rem;">
+                    {% if resource.file_extension in '.pdf' %}
+                      <i class="fa-solid fa-file-pdf text-danger"></i>
+                    {% elif resource.file_extension in '.doc,.docx' %}
+                      <i class="fa-solid fa-file-word text-primary"></i>
+                    {% elif resource.file_extension in '.ppt,.pptx' %}
+                      <i class="fa-solid fa-file-powerpoint text-warning"></i>
+                    {% elif resource.file_extension in '.zip,.rar' %}
+                      <i class="fa-solid fa-file-zipper text-secondary"></i>
+                    {% else %}
+                      <i class="fa-solid fa-file-lines text-secondary"></i>
+                    {% endif %}
+                  </div>
+                  <div>
+                    <div class="fw-bold" style="color: var(--color-primary-espresso);">
+                      {{ resource.original_filename|default:"Downloadable Document" }}
+                    </div>
+                    <div class="small text-muted">
+                      <span>Size: {{ resource.file_size_display|default:"Unknown" }}</span>
+                      <span class="mx-1">&bull;</span>
+                      <span>Format: {{ resource.file_extension|upper }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <a href="{% url 'courseware:resource_download' resource.pk %}" class="btn btn-espresso btn-sm px-3">
+                  <i class="fa-solid fa-download me-1"></i> Download Material
+                </a>
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- External URL Section -->
+          {% if resource.external_url %}
+            <div class="p-3 rounded-3 border mb-3" style="background-color: var(--color-bg-subtle); border-color: var(--color-border-subtle) !important;">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                       style="width: 48px; height: 48px; background: white; border: 1px solid var(--color-border-subtle); font-size: 1.4rem; color: var(--color-status-info);">
+                    {% if resource.resource_type == 'VIDEO_LINK' %}
+                      <i class="fa-solid fa-video"></i>
+                    {% else %}
+                      <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    {% endif %}
+                  </div>
+                  <div>
+                    <div class="fw-bold" style="color: var(--color-primary-espresso);">
+                      External Educational Link
+                    </div>
+                    <div class="small text-muted text-break">
+                      {{ resource.external_url }}
+                    </div>
+                  </div>
+                </div>
+
+                <a href="{{ resource.external_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-academic btn-sm px-3">
+                  <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Open External URL
+                </a>
+              </div>
+            </div>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Metadata Sidebar Column -->
+    <div class="col-lg-4">
+      <div class="card card-academic shadow-sm mb-4">
+        <div class="card-header-academic py-3 px-4">
+          <h5 class="h6 fw-bold mb-0" style="color: var(--color-primary-espresso);">
+            <i class="fa-solid fa-circle-nodes me-2" style="color: var(--color-primary-saddle);"></i>Course Context
+          </h5>
+        </div>
+        <div class="card-body card-body-academic p-3">
+          <dl class="row mb-0 small">
+            <dt class="col-sm-5 text-muted">Course Code</dt>
+            <dd class="col-sm-7 fw-semibold">{{ resource.course.code }}</dd>
+
+            <dt class="col-sm-5 text-muted">Course Name</dt>
+            <dd class="col-sm-7">{{ resource.course.title }}</dd>
+
+            {% if resource.course.department %}
+              <dt class="col-sm-5 text-muted">Department</dt>
+              <dd class="col-sm-7">{{ resource.course.department.name }}</dd>
+            {% endif %}
+
+            <dt class="col-sm-5 text-muted">Credit Units</dt>
+            <dd class="col-sm-7">{{ resource.course.credits }} CU</dd>
+
+            <dt class="col-sm-5 text-muted">Resource Type</dt>
+            <dd class="col-sm-7">{{ resource.get_resource_type_display }}</dd>
+
+            <dt class="col-sm-5 text-muted">Uploaded By</dt>
+            <dd class="col-sm-7">{{ resource.created_by.get_full_name|default:resource.created_by.email }}</dd>
+
+            <dt class="col-sm-5 text-muted">Created Date</dt>
+            <dd class="col-sm-7">{{ resource.created_at|date:"d M Y H:i" }}</dd>
+
+            <dt class="col-sm-5 text-muted">Published</dt>
+            <dd class="col-sm-7">{{ resource.published_at|date:"d M Y H:i"|default:"Not Published" }}</dd>
+
+            <dt class="col-sm-5 text-muted">Last Updated</dt>
+            <dd class="col-sm-7">{{ resource.updated_at|date:"d M Y H:i" }}</dd>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Security Notice -->
+      <div class="card card-academic shadow-sm p-3 small text-muted" style="background-color: var(--color-bg-subtle);">
+        <div class="d-flex align-items-start gap-2">
+          <i class="fa-solid fa-shield-halved mt-1" style="color: var(--color-primary-saddle);"></i>
+          <div>
+            <strong>Access Verification:</strong> This resource is accessible exclusively to registered students, allocated lecturers, and authorized guardians. Direct unauthenticated downloads are strictly blocked.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock content %}

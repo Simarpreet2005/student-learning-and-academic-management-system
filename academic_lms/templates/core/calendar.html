@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block title %}Academic Calendar | Academic LMS{% endblock %}
+
+{% block extra_css %}
+<style>
+  .calendar-table {
+    table-layout: fixed;
+    width: 100%;
+  }
+  .calendar-day-cell {
+    height: 120px;
+    vertical-align: top;
+    padding: 6px;
+    border: 1px solid var(--color-border-subtle);
+    background-color: var(--color-bg-surface);
+  }
+  .calendar-day-other-month {
+    background-color: var(--color-bg-subtle) !important;
+    opacity: 0.55;
+  }
+  .calendar-day-today {
+    background-color: #FAF4EE !important;
+    border: 2px solid var(--color-accent-caramel) !important;
+  }
+  .calendar-event-pill {
+    display: block;
+    font-size: 0.72rem;
+    padding: 2px 6px;
+    margin-bottom: 3px;
+    border-radius: 4px;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <!-- Page Header & View Mode Switcher -->
+  <div class="row align-items-center mb-4">
+    <div class="col-md-6">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-1">
+          <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-espresso text-decoration-none">Home</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Academic Calendar</li>
+        </ol>
+      </nav>
+      <h1 class="h2 text-espresso fw-bold mb-1">
+        <i class="fa-solid fa-calendar-days text-caramel me-2"></i>Academic Calendar &amp; Master Timeline
+      </h1>
+      <p class="text-muted small mb-0">
+        Institutional term dates, campus events, assignment deadlines, and quiz availability windows.
+      </p>
+    </div>
+    <div class="col-md-6 text-md-end mt-3 mt-md-0">
+      <div class="btn-group shadow-sm me-2">
+        <a href="?view=month&year={{ cur_year }}&month={{ cur_month }}&type={{ event_type }}{% if course_id %}&course={{ course_id }}{% endif %}{% if target_student_id %}&student_id={{ target_student_id }}{% endif %}" class="btn btn-sm {% if view_mode == 'month' %}btn-espresso{% else %}btn-outline-espresso{% endif %}">
+          <i class="fa-solid fa-calendar-alt me-1"></i> Month
+        </a>
+        <a href="?view=week&year={{ cur_year }}&month={{ cur_month }}&type={{ event_type }}{% if course_id %}&course={{ course_id }}{% endif %}{% if target_student_id %}&student_id={{ target_student_id }}{% endif %}" class="btn btn-sm {% if view_mode == 'week' %}btn-espresso{% else %}btn-outline-espresso{% endif %}">
+          <i class="fa-solid fa-calendar-week me-1"></i> Week
+        </a>
+        <a href="?view=list&year={{ cur_year }}&month={{ cur_month }}&type={{ event_type }}{% if course_id %}&course={{ course_id }}{% endif %}{% if target_student_id %}&student_id={{ target_student_id }}{% endif %}" class="btn btn-sm {% if view_mode == 'list' %}btn-espresso{% else %}btn-outline-espresso{% endif %}">
+          <i class="fa-solid fa-list-ul me-1"></i> List
+        </a>
+      </div>
+      <a href="{% url 'planner:dashboard' %}" class="btn btn-sm btn-outline-secondary shadow-sm">
+        <i class="fa-solid fa-compass-drafting me-1"></i> Workload Planner
+      </a>
+    </div>
+  </div>
+
+  <!-- Filter & Navigation Toolbar -->
+  <div class="card card-academic border-0 shadow-sm mb-4">
+    <div class="card-body p-3">
+      <form method="get" class="row g-2 align-items-center">
+        <input type="hidden" name="view" value="{{ view_mode }}">
+
+        <!-- Month Navigation (Month View) -->
+        {% if view_mode == 'month' %}
+        <div class="col-md-4 d-flex align-items-center">
+          <a href="?view=month&year={{ prev_year }}&month={{ prev_month }}&type={{ event_type }}{% if course_id %}&course={{ course_id }}{% endif %}{% if target_student_id %}&student_id={{ target_student_id }}{% endif %}" class="btn btn-sm btn-outline-secondary me-2">
+            <i class="fa-solid fa-chevron-left"></i>
+          </a>
+          <h5 class="fw-bold text-espresso mb-0 text-nowrap flex-grow-1 text-center">
+            {{ month_name }} {{ cur_year }}
+          </h5>
+          <a href="?view=month&year={{ next_year }}&month={{ next_month }}&type={{ event_type }}{% if course_id %}&course={{ course_id }}{% endif %}{% if target_student_id %}&student_id={{ target_student_id }}{% endif %}" class="btn btn-sm btn-outline-secondary ms-2">
+            <i class="fa-solid fa-chevron-right"></i>
+          </a>
+        </div>
+        {% else %}
+        <div class="col-md-4">
+          <span class="fw-bold text-espresso">Events Overview</span>
+        </div>
+        {% endif %}
+
+        <!-- Filter by Event Type -->
+        <div class="col-sm-6 col-md-3">
+          <select name="type" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="ALL" {% if event_type == 'ALL' %}selected{% endif %}>All Event Types</option>
+            <option value="ACADEMIC" {% if event_type == 'ACADEMIC' %}selected{% endif %}>Institutional &amp; Holidays</option>
+            <option value="SEMESTER" {% if event_type == 'SEMESTER' %}selected{% endif %}>Semester Terms</option>
+            <option value="ASSIGNMENT" {% if event_type == 'ASSIGNMENT' %}selected{% endif %}>Assignment Deadlines</option>
+            <option value="QUIZ" {% if event_type == 'QUIZ' %}selected{% endif %}>Quiz Deadlines &amp; Windows</option>
+          </select>
+        </div>
+
+        <!-- Filter by Course (if courses available) -->
+        {% if filter_courses %}
+        <div class="col-sm-6 col-md-3">
+          <select name="course" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">All Courses</option>
+            {% for c in filter_courses %}
+            <option value="{{ c.id }}" {% if course_id == c.id %}selected{% endif %}>{{ c.code }} — {{ c.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+
+        <!-- Linked Student Selector for Parents -->
+        {% if linked_children|length > 1 %}
+        <div class="col-sm-6 col-md-2">
+          <select name="student_id" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">All Linked Students</option>
+            {% for rel in linked_children %}
+            <option value="{{ rel.student.id }}" {% if target_student_id == rel.student.id %}selected{% endif %}>{{ rel.student.get_full_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  <!-- VIEW 1: MONTH GRID -->
+  {% if view_mode == 'month' %}
+  <div class="card card-academic border-0 shadow-sm mb-4">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table mb-0 calendar-table">
+          <thead>
+            <tr class="bg-subtle text-espresso text-center">
+              <th style="width: 14.28%;">Mon</th>
+              <th style="width: 14.28%;">Tue</th>
+              <th style="width: 14.28%;">Wed</th>
+              <th style="width: 14.28%;">Thu</th>
+              <th style="width: 14.28%;">Fri</th>
+              <th style="width: 14.28%;">Sat</th>
+              <th style="width: 14.28%;">Sun</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for week in month_grid %}
+            <tr>
+              {% for day in week %}
+              <td class="calendar-day-cell {% if not day.is_current_month %}calendar-day-other-month{% endif %} {% if day.is_today %}calendar-day-today{% endif %}">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="small fw-bold {% if day.is_today %}text-terracotta{% else %}text-espresso{% endif %}">
+                    {{ day.day_number }}
+                  </span>
+                  {% if day.is_today %}
+                  <span class="badge bg-caramel text-white" style="font-size: 0.6rem;">Today</span>
+                  {% endif %}
+                </div>
+
+                <div class="d-flex flex-column gap-1 overflow-hidden" style="max-height: 85px;">
+                  {% for ev in day.events %}
+                  <div class="calendar-event-pill {% if ev.category == 'ASSIGNMENT' %}bg-warning text-dark{% elif ev.category == 'QUIZ' %}bg-info text-white{% elif ev.category == 'SEMESTER' %}bg-success text-white{% else %}bg-secondary text-white{% endif %}" title="{{ ev.title }} ({{ ev.start_date|date:'H:i' }})">
+                    <i class="fa-solid {{ ev.icon }} me-1"></i>{{ ev.title }}
+                  </div>
+                  {% endfor %}
+                </div>
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 2: WEEK TIMELINE -->
+  {% elif view_mode == 'week' %}
+  <div class="row g-3 mb-4">
+    {% for day in week_days %}
+    <div class="col-md-6 col-lg">
+      <div class="card card-academic h-100 border-0 shadow-sm {% if day.is_today %}calendar-day-today{% endif %}">
+        <div class="card-header bg-subtle py-2 d-flex justify-content-between align-items-center">
+          <span class="fw-bold text-espresso small">{{ day.weekday_name }}</span>
+          <span class="badge bg-surface text-espresso border" style="font-size: 0.7rem;">{{ day.date|date:"M d" }}</span>
+        </div>
+        <div class="card-body p-2 d-flex flex-column gap-2">
+          {% for ev in day.events %}
+          <div class="p-2 rounded border small bg-surface shadow-none" style="border-left: 3px solid {% if ev.category == 'ASSIGNMENT' %}var(--color-status-warning){% elif ev.category == 'QUIZ' %}var(--color-status-info){% else %}var(--color-primary-espresso){% endif %} !important;">
+            <div class="fw-bold text-espresso text-truncate" title="{{ ev.title }}">
+              <i class="fa-solid {{ ev.icon }} me-1"></i>{{ ev.title }}
+            </div>
+            <div class="text-muted" style="font-size: 0.7rem;">
+              <i class="fa-regular fa-clock me-1"></i>{{ ev.start_date|date:"H:i" }} &bull; {{ ev.category_label }}
+            </div>
+            {% if ev.location %}
+            <div class="text-muted text-truncate" style="font-size: 0.7rem;">
+              <i class="fa-solid fa-location-dot me-1"></i>{{ ev.location }}
+            </div>
+            {% endif %}
+          </div>
+          {% empty %}
+          <div class="text-center text-muted py-4 small" style="font-style: italic;">
+            No events
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- VIEW 3: CHRONOLOGICAL LIST -->
+  {% elif view_mode == 'list' %}
+  <div class="card card-academic border-0 shadow-sm mb-4">
+    <div class="card-header bg-subtle py-3 border-bottom d-flex align-items-center justify-content-between">
+      <h5 class="card-title text-espresso fw-bold mb-0">
+        <i class="fa-solid fa-list-ol text-caramel me-2"></i>Upcoming Events &amp; Milestones
+      </h5>
+      <span class="badge bg-subtle text-espresso border">{{ events|length }} Item{{ events|length|pluralize }}</span>
+    </div>
+    <div class="card-body p-0">
+      {% if events %}
+      <div class="table-responsive">
+        <table class="table table-hover table-academic mb-0 align-middle">
+          <thead>
+            <tr>
+              <th style="width: 15%;">Event Category</th>
+              <th style="width: 35%;">Title &amp; Course</th>
+              <th style="width: 25%;">Date &amp; Time</th>
+              <th style="width: 25%;">Details / Location</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ev in events %}
+            <tr>
+              <td>
+                <span class="badge {{ ev.badge_class }} px-2 py-1">
+                  <i class="fa-solid {{ ev.icon }} me-1"></i>{{ ev.category_label }}
+                </span>
+              </td>
+              <td>
+                <div class="fw-bold text-espresso">
+                  {% if ev.url %}
+                  <a href="{{ ev.url }}" class="text-espresso text-decoration-none">{{ ev.title }}</a>
+                  {% else %}
+                  {{ ev.title }}
+                  {% endif %}
+                </div>
+                {% if ev.course_code %}
+                <div class="small text-muted">
+                  <span class="badge bg-subtle text-espresso border">{{ ev.course_code }}</span> {{ ev.course_title }}
+                </div>
+                {% endif %}
+              </td>
+              <td>
+                <div class="fw-semibold text-espresso">{{ ev.start_date|date:"M d, Y" }}</div>
+                <div class="small text-muted">{{ ev.start_date|date:"H:i" }}{% if ev.end_date %} &rarr; {{ ev.end_date|date:"M d, H:i" }}{% endif %}</div>
+              </td>
+              <td>
+                <div class="small text-muted">{{ ev.description|truncatewords:15 }}</div>
+                {% if ev.location %}
+                <div class="small text-muted"><i class="fa-solid fa-location-dot me-1 text-caramel"></i>{{ ev.location }}</div>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-muted">
+        <i class="fa-solid fa-calendar-xmark fa-3x text-muted mb-3 opacity-50"></i>
+        <h5 class="fw-bold text-espresso">No Events Found</h5>
+        <p class="small text-muted mb-0">No academic events or deliverable deadlines match your selected filter criteria.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

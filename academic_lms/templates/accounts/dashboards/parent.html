@@ -1,0 +1,343 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Parent Portal | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4">
+
+  <!-- Page Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h1 class="h3 fw-bold mb-1" style="color: var(--color-primary-espresso);">
+        <i class="fa-solid fa-users me-2"></i>Parent &amp; Guardian Portal
+      </h1>
+      <p class="text-muted mb-0">Authorized read-only view of your linked student's academic progress, submissions, and schedule.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'core:calendar' %}" class="btn btn-outline-academic btn-sm">
+        <i class="fa-solid fa-calendar-days me-1"></i> Academic Calendar
+      </a>
+      <a href="{% url 'accounts:profile' %}" class="btn btn-outline-academic btn-sm">
+        <i class="fa-solid fa-id-card me-1"></i> My Profile
+      </a>
+    </div>
+  </div>
+
+  <!-- Multi-Child Selector (when parent has linked students) -->
+  {% if linked_students %}
+    <div class="card card-academic shadow-sm mb-4">
+      <div class="card-body card-body-academic py-2 px-3">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <span class="small fw-bold text-muted text-uppercase">Active Student:</span>
+            <div class="btn-group" role="group">
+              {% for rel in linked_students %}
+                <a href="?student_id={{ rel.student.pk }}"
+                   class="btn btn-sm {% if selected_student.pk == rel.student.pk %}btn-espresso{% else %}btn-outline-academic{% endif %}">
+                  <i class="fa-solid fa-user-graduate me-1"></i>
+                  {{ rel.student.get_full_name|default:rel.student.email }}
+                  <span class="badge bg-light text-dark ms-1" style="font-size:0.7rem;">{{ rel.get_relationship_type_display }}</span>
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+          {% if selected_student and selected_student.student_profile %}
+            <div class="small text-muted">
+              ID: <strong>{{ selected_student.student_profile.student_id|default:"—" }}</strong> &bull;
+              Programme: <strong>{{ selected_student.student_profile.program|default:"Not specified" }}</strong>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if selected_student %}
+    <!-- KPI Row for Selected Student -->
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-xl-3">
+        <div class="card card-academic h-100 shadow-sm">
+          <div class="card-body card-body-academic d-flex align-items-center gap-3">
+            <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width:50px;height:50px;background:linear-gradient(135deg,var(--color-primary-espresso),var(--color-primary-saddle));">
+              <i class="fa-solid fa-book-open fa-lg text-white"></i>
+            </div>
+            <div>
+              <div class="h3 fw-bold mb-0" style="color: var(--color-primary-espresso);">{{ student_enrollments|length }}</div>
+              <div class="small text-muted">Enrolled Courses</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="card card-academic h-100 shadow-sm">
+          <div class="card-body card-body-academic d-flex align-items-center gap-3">
+            <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width:50px;height:50px;background:linear-gradient(135deg,#2C6E49,#52B788);">
+              <i class="fa-solid fa-clock fa-lg text-white"></i>
+            </div>
+            <div>
+              <div class="h3 fw-bold mb-0" style="color: #2C6E49;">
+                {% if workload %}{{ workload.total_pending_tasks }}{% else %}{{ upcoming_assignments|length|add:upcoming_quizzes|length }}{% endif %}
+              </div>
+              <div class="small text-muted">Upcoming Deadlines</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="card card-academic h-100 shadow-sm">
+          <div class="card-body card-body-academic d-flex align-items-center gap-3">
+            <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width:50px;height:50px;background:linear-gradient(135deg,#D97706,#F59E0B);">
+              <i class="fa-solid fa-gauge-high fa-lg text-white"></i>
+            </div>
+            <div>
+              <div class="fw-bold mb-0" style="font-size: 1.15rem; color: var(--color-primary-espresso);">
+                {% if workload %}
+                  <span class="badge {{ workload.workload_badge_class }}">{{ workload.workload_label }}</span>
+                {% else %}
+                  <span class="badge bg-secondary">Normal</span>
+                {% endif %}
+              </div>
+              <div class="small text-muted">Workload Level</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="card card-academic h-100 shadow-sm">
+          <div class="card-body card-body-academic d-flex align-items-center gap-3">
+            <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width:50px;height:50px;background:linear-gradient(135deg,#7D3C98,#A569BD);">
+              <i class="fa-solid fa-award fa-lg text-white"></i>
+            </div>
+            <div>
+              <div class="h3 fw-bold mb-0" style="color: #7D3C98;">
+                {{ recent_submissions|length|add:recent_quiz_results|length }}
+              </div>
+              <div class="small text-muted">Evaluated Records</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Left Column: Upcoming Deadlines & Submission Status -->
+      <div class="col-lg-8">
+
+        <!-- Upcoming Deadlines -->
+        <div class="card card-academic shadow-sm mb-4">
+          <div class="card-header-academic d-flex align-items-center justify-content-between">
+            <span><i class="fa-solid fa-calendar-check me-2"></i>Upcoming Deadlines for {{ selected_student.get_full_name|default:selected_student.email }}</span>
+            <span class="badge badge-academic">{{ upcoming_assignments|length|add:upcoming_quizzes|length }} Pending</span>
+          </div>
+          <div class="card-body card-body-academic p-0">
+            <div class="table-responsive">
+              <table class="table table-academic mb-0 small">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Task &amp; Course</th>
+                    <th>Due Date</th>
+                    <th>Required Effort / Length</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for a in upcoming_assignments %}
+                    <tr>
+                      <td><span class="badge bg-primary">Assignment</span></td>
+                      <td>
+                        <div class="fw-semibold">{{ a.title }}</div>
+                        <div class="text-muted">{{ a.course.code }} &bull; {{ a.course.title }}</div>
+                      </td>
+                      <td class="text-dark fw-semibold">{{ a.due_date|date:"M d, Y H:i" }}</td>
+                      <td>
+                        {% if a.estimated_effort_hours %}
+                          <span class="badge bg-light text-dark border">{{ a.estimated_effort_hours }}h effort</span>
+                        {% else %}
+                          <span class="text-muted">—</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                  {% for q in upcoming_quizzes %}
+                    <tr>
+                      <td><span class="badge bg-success">Quiz</span></td>
+                      <td>
+                        <div class="fw-semibold">{{ q.title }}</div>
+                        <div class="text-muted">{{ q.course.code }} &bull; {{ q.course.title }}</div>
+                      </td>
+                      <td class="text-dark fw-semibold">{{ q.available_to|date:"M d, Y H:i" }}</td>
+                      <td><span class="badge bg-light text-dark border">{{ q.duration_minutes }} mins</span></td>
+                    </tr>
+                  {% endfor %}
+                  {% if not upcoming_assignments and not upcoming_quizzes %}
+                    <tr>
+                      <td colspan="4" class="text-center text-muted py-4">
+                        <i class="fa-solid fa-calendar-check fa-2x mb-2 text-muted"></i>
+                        <p class="mb-0">No upcoming assignment or quiz deadlines pending.</p>
+                      </td>
+                    </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Results & Scores -->
+        <div class="card card-academic shadow-sm mb-4">
+          <div class="card-header-academic d-flex align-items-center justify-content-between">
+            <span><i class="fa-solid fa-square-poll-vertical me-2"></i>Permitted Academic Results &amp; Feedback</span>
+          </div>
+          <div class="card-body card-body-academic p-0">
+            <div class="table-responsive">
+              <table class="table table-academic mb-0 small">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Course</th>
+                    <th>Submitted</th>
+                    <th>Status</th>
+                    <th>Marks / Percentage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for sub in recent_submissions %}
+                    <tr>
+                      <td class="fw-semibold">{{ sub.assignment.title }}</td>
+                      <td>{{ sub.assignment.course.code }}</td>
+                      <td class="text-muted">{{ sub.submitted_at|date:"M d, Y" }}</td>
+                      <td>
+                        <span class="badge {% if sub.status == 'GRADED' %}bg-success{% elif sub.status == 'LATE' %}bg-danger{% else %}bg-secondary{% endif %}">
+                          {{ sub.get_status_display }}
+                        </span>
+                      </td>
+                      <td class="fw-bold">
+                        {% if sub.score is not None %}
+                          {{ sub.score }} / {{ sub.assignment.maximum_marks }}
+                        {% else %}
+                          <span class="text-muted">Awaiting Grade</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                  {% for attempt in recent_quiz_results %}
+                    <tr>
+                      <td class="fw-semibold">{{ attempt.quiz.title }}</td>
+                      <td>{{ attempt.quiz.course.code }}</td>
+                      <td class="text-muted">{{ attempt.submitted_at|date:"M d, Y"|default:attempt.started_at|date:"M d, Y" }}</td>
+                      <td><span class="badge bg-success">Completed</span></td>
+                      <td class="fw-bold text-success">
+                        {{ attempt.score_obtained }} / {{ attempt.total_marks }}
+                        <span class="text-muted fw-normal">({{ attempt.percentage }}%)</span>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                  {% if not recent_submissions and not recent_quiz_results %}
+                    <tr>
+                      <td colspan="5" class="text-center text-muted py-4">
+                        <i class="fa-solid fa-inbox fa-2x mb-2 text-muted"></i>
+                        <p class="mb-0">No submitted or graded assessment records available yet.</p>
+                      </td>
+                    </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Enrolled Courses & Institutional Events -->
+      <div class="col-lg-4">
+
+        <!-- Enrolled Courses -->
+        <div class="card card-academic shadow-sm mb-4">
+          <div class="card-header-academic d-flex align-items-center justify-content-between">
+            <span><i class="fa-solid fa-graduation-cap me-2"></i>Enrolled Courses</span>
+            <span class="badge badge-academic">{{ student_enrollments|length }}</span>
+          </div>
+          <div class="card-body card-body-academic p-0">
+            {% if student_enrollments %}
+              <div class="list-group list-group-flush">
+                {% for enroll in student_enrollments %}
+                  <div class="list-group-item py-2 px-3 small">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                      <span class="fw-bold" style="color:var(--color-primary-espresso);">{{ enroll.course.code }}</span>
+                      <span class="badge bg-light text-dark border">{{ enroll.course.credits }} cr</span>
+                    </div>
+                    <div class="fw-semibold text-dark text-truncate">{{ enroll.course.title }}</div>
+                    <div class="text-muted" style="font-size:0.75rem;">{{ enroll.course.department.name|default:"General" }}</div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="text-center py-3 text-muted small px-3">
+                Student is not enrolled in any active courses.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Academic Events -->
+        <div class="card card-academic shadow-sm mb-4">
+          <div class="card-header-academic d-flex align-items-center justify-content-between">
+            <span><i class="fa-solid fa-calendar-days me-2"></i>Institutional Events</span>
+            <a href="{% url 'core:calendar' %}" class="btn btn-outline-academic btn-sm">Calendar &raquo;</a>
+          </div>
+          <div class="card-body card-body-academic p-0">
+            {% if upcoming_events %}
+              <div class="list-group list-group-flush">
+                {% for evt in upcoming_events %}
+                  <div class="list-group-item py-2 px-3 small">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                      <span class="badge bg-secondary" style="font-size:0.7rem;">{{ evt.get_event_type_display }}</span>
+                      <span class="text-muted" style="font-size:0.75rem;">{{ evt.start_date|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="fw-semibold text-dark">{{ evt.title }}</div>
+                    {% if evt.location %}
+                      <div class="text-muted" style="font-size:0.75rem;"><i class="fa-solid fa-location-dot me-1"></i>{{ evt.location }}</div>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="text-center py-3 text-muted small px-3">
+                No upcoming institutional events scheduled.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  {% else %}
+    <!-- No Linked Students State -->
+    <div class="card card-academic shadow-sm text-center py-5">
+      <div class="card-body card-body-academic">
+        <i class="fa-solid fa-user-slash fa-3x mb-3 text-muted"></i>
+        <h5 class="fw-bold">No Students Linked to Your Account</h5>
+        <p class="text-muted small mb-3">
+          To view academic progress, assignments, and grades, a parent–student relationship must be established by the system administrator.
+        </p>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Read-Only Notice -->
+  <div class="alert mt-4" role="alert" style="background-color:var(--color-bg-subtle); border-left: 3px solid var(--color-primary-saddle);">
+    <i class="fa-solid fa-lock me-2" style="color:var(--color-primary-saddle);"></i>
+    <strong>Strict Read-Only Access:</strong> Parent and guardian accounts have authorized read-only visibility into academic progress for their verified children only. Modifying grades, submissions, or administrative records is prohibited.
+  </div>
+
+</div>
+{% endblock content %}

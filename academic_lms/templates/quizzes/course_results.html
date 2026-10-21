@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Course Results: {{ quiz.title }} | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-lg-4">
+
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'quizzes:quiz_list' %}">Quizzes</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'quizzes:quiz_detail' pk=quiz.pk %}">{{ quiz.title }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Course Results</li>
+    </ol>
+  </nav>
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge" style="background-color: var(--color-primary-espresso); color: #fff;">{{ quiz.course.code }}</span>
+        <span class="badge bg-secondary">{{ quiz.course.title }}</span>
+      </div>
+      <h1 class="h3 fw-bold mb-1" style="color: var(--color-primary-espresso);">Course Assessment Gradebook</h1>
+      <p class="text-muted mb-0">Quiz: <strong>{{ quiz.title }}</strong> &bull; {{ total_enrolled }} enrolled student{{ total_enrolled|pluralize }}</p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <a href="{% url 'quizzes:quiz_detail' pk=quiz.pk %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fa-solid fa-arrow-left me-1"></i> Back to Quiz
+      </a>
+      <a href="{% url 'quizzes:question_manage' pk=quiz.pk %}" class="btn btn-outline-academic btn-sm">
+        <i class="fa-solid fa-list-ol me-1"></i> Question Bank
+      </a>
+    </div>
+  </div>
+
+  <!-- Metric Statistics Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-md-3">
+      <div class="card card-academic shadow-sm p-3 text-center">
+        <span class="small text-muted d-block">Total Enrolled</span>
+        <span class="fw-bold fs-4" style="color: var(--color-primary-espresso);">{{ total_enrolled }}</span>
+        <span class="small text-muted">{{ stats.unique_students }} attempted ({{ stats.total_attempts }} sitting{{ stats.total_attempts|pluralize }})</span>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <div class="card card-academic shadow-sm p-3 text-center">
+        <span class="small text-muted d-block">Average Performance</span>
+        <span class="fw-bold fs-4" style="color: var(--color-primary-mocha);">{{ stats.average_score }} pts</span>
+        <span class="small text-muted">{{ stats.average_percentage }}% mean score</span>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <div class="card card-academic shadow-sm p-3 text-center">
+        <span class="small text-muted d-block">Pass Rate</span>
+        <span class="fw-bold fs-4 text-success">{{ stats.pass_rate }}%</span>
+        <span class="small text-muted">{{ stats.passed_count }} passed / {{ stats.failed_count }} failed</span>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <div class="card card-academic shadow-sm p-3 text-center">
+        <span class="small text-muted d-block">Pending Grading</span>
+        <span class="fw-bold fs-4 {% if stats.pending_manual_grading > 0 %}text-warning text-dark{% else %}text-muted{% endif %}">
+          {{ stats.pending_manual_grading }}
+        </span>
+        <span class="small text-muted">Short-answer review{{ stats.pending_manual_grading|pluralize }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enrolled Students & Attempts Roster -->
+  <div class="card card-academic shadow-sm">
+    <div class="card-header card-header-academic bg-transparent border-bottom py-3">
+      <h5 class="mb-0 fw-bold" style="color: var(--color-primary-espresso);">
+        <i class="fa-solid fa-users-rectangle me-2" style="color: var(--color-primary-saddle);"></i>
+        Enrolled Student Performance Roster
+      </h5>
+    </div>
+    <div class="card-body card-body-academic p-0">
+      {% if roster %}
+        <div class="table-responsive">
+          <table class="table table-academic table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Student</th>
+                <th>Username / ID</th>
+                <th>Attempts</th>
+                <th>Best Score</th>
+                <th>Best %</th>
+                <th>Outcome</th>
+                <th class="text-end">Sittings &amp; Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in roster %}
+                <tr>
+                  <td>
+                    <div class="fw-bold text-dark">{{ item.student.get_full_name }}</div>
+                    <div class="small text-muted">{{ item.student.email }}</div>
+                  </td>
+                  <td><code>{{ item.student.username }}</code></td>
+                  <td>
+                    <span class="badge bg-light text-dark border">
+                      {{ item.attempts_count }} / {{ quiz.max_attempts }}
+                    </span>
+                  </td>
+                  <td>
+                    {% if item.best_score is not None %}
+                      <strong>{{ item.best_score }}</strong> / {{ quiz.total_marks }}
+                    {% else %}
+                      <span class="text-muted">—</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if item.best_percentage is not None %}
+                      <span class="fw-bold {% if item.has_passed %}text-success{% else %}text-danger{% endif %}">
+                        {{ item.best_percentage }}%
+                      </span>
+                    {% else %}
+                      <span class="text-muted">—</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if item.attempts_count == 0 %}
+                      <span class="badge bg-secondary-subtle text-secondary border">Not Attempted</span>
+                    {% elif item.has_passed %}
+                      <span class="badge bg-success">Passed</span>
+                    {% else %}
+                      {% if item.attempts.0.status == AttemptStatus.SUBMITTED %}
+                        <span class="badge bg-warning text-dark">Needs Review</span>
+                      {% else %}
+                        <span class="badge bg-danger">Not Passed</span>
+                      {% endif %}
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    {% if item.attempts %}
+                      <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
+                        {% for att in item.attempts %}
+                          {% if att.status == AttemptStatus.SUBMITTED %}
+                            <a href="{% url 'quizzes:attempt_review' attempt_pk=att.pk %}" class="btn btn-warning btn-sm py-0 px-2" title="Grade Short Answer #{{ att.attempt_number }}">
+                              <i class="fa-solid fa-marker me-1"></i> Grade #{{ att.attempt_number }}
+                            </a>
+                          {% else %}
+                            <a href="{% url 'quizzes:quiz_result' attempt_pk=att.pk %}" class="btn btn-outline-academic btn-sm py-0 px-2" title="View #{{ att.attempt_number }}">
+                              #{{ att.attempt_number }} ({{ att.score_obtained }})
+                            </a>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                    {% else %}
+                      <span class="text-muted small">No sittings</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="fa-solid fa-user-xmark fa-2x mb-2"></i>
+          <p class="mb-0">No students are currently enrolled in this course.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

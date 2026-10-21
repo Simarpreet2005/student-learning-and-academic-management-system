@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Courseware &amp; Learning Materials | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-lg-4">
+
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Courseware &amp; Materials</li>
+    </ol>
+  </nav>
+
+  <!-- Page Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1" style="color: var(--color-primary-espresso);">
+        <i class="fa-solid fa-book-open-reader me-2" style="color: var(--color-primary-saddle);"></i>
+        {% if request.user.is_student_role %}My Learning Materials
+        {% elif request.user.is_parent_role %}Student Course Materials
+        {% else %}Courseware &amp; Learning Materials{% endif %}
+      </h1>
+      <p class="text-muted mb-0">
+        {% if request.user.is_student_role %}
+          Access syllabus materials, lecture slides, and notes for your registered courses.
+        {% elif request.user.is_parent_role %}
+          View published educational materials for courses enrolled by your linked student(s).
+        {% elif request.user.is_lecturer_role %}
+          Publish and organize learning materials for your assigned courses.
+        {% else %}
+          Institutional learning repository and courseware oversight.
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      {% if can_create %}
+        <a href="{% url 'courseware:module_create' %}" class="btn btn-outline-academic btn-sm">
+          <i class="fa-solid fa-folder-plus me-1"></i> Add Module
+        </a>
+        <a href="{% url 'courseware:resource_create' %}" class="btn btn-espresso btn-sm">
+          <i class="fa-solid fa-cloud-arrow-up me-1"></i> Upload Resource
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="card card-academic shadow-sm mb-4">
+    <div class="card-body card-body-academic py-3">
+      <form method="get" class="row g-2 align-items-end">
+        <!-- Search query -->
+        <div class="col-md-4">
+          <label class="form-label small fw-semibold text-muted mb-1">Search Resources</label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="fa-solid fa-magnifying-glass text-muted"></i>
+            </span>
+            <input type="text" name="q" class="form-control form-control-sm border-start-0"
+                   placeholder="Search title, description, or code..." value="{{ query }}">
+          </div>
+        </div>
+
+        <!-- Course filter -->
+        <div class="col-md-3 col-sm-6">
+          <label class="form-label small fw-semibold text-muted mb-1">Filter by Course</label>
+          <select name="course" class="form-select form-select-sm">
+            <option value="">All Accessible Courses</option>
+            {% for course in available_courses %}
+              <option value="{{ course.code }}" {% if selected_course|lower == course.code|lower %}selected{% endif %}>
+                {{ course.code }} — {{ course.title }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Resource Type filter -->
+        <div class="col-md-2 col-sm-6">
+          <label class="form-label small fw-semibold text-muted mb-1">Resource Type</label>
+          <select name="type" class="form-select form-select-sm">
+            <option value="">All Types</option>
+            {% for val, label in resource_types %}
+              <option value="{{ val }}" {% if selected_type == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Status filter (Lecturer & Admin only) -->
+        {% if request.user.is_admin_role or request.user.is_lecturer_role %}
+          <div class="col-md-2 col-sm-6">
+            <label class="form-label small fw-semibold text-muted mb-1">Status</label>
+            <select name="status" class="form-select form-select-sm">
+              <option value="">All Statuses</option>
+              {% for val, label in status_choices %}
+                <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        {% endif %}
+
+        <!-- Filter Buttons -->
+        <div class="col-md-1 col-sm-6 d-flex gap-1">
+          <button type="submit" class="btn btn-espresso btn-sm w-100" title="Apply Filter">
+            <i class="fa-solid fa-filter"></i>
+          </button>
+          {% if query or selected_course or selected_type or selected_status %}
+            <a href="{% url 'courseware:resource_list' %}" class="btn btn-outline-academic btn-sm" title="Clear Filters">
+              <i class="fa-solid fa-xmark"></i>
+            </a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Resources Grid / List -->
+  {% if page_obj.object_list %}
+    <div class="row g-3 mb-4">
+      {% for resource in page_obj.object_list %}
+        <div class="col-md-6 col-xl-4">
+          <div class="card card-academic h-100 shadow-sm d-flex flex-column">
+            <!-- Card Header -->
+            <div class="card-header-academic d-flex align-items-center justify-content-between py-2 px-3">
+              <span class="badge badge-academic bg-white border fw-bold" style="color: var(--color-primary-espresso);">
+                <i class="fa-solid fa-graduation-cap me-1"></i>{{ resource.course.code }}
+              </span>
+
+              <div class="d-flex align-items-center gap-1">
+                <!-- Status badge for Lecturer/Admin -->
+                {% if request.user.is_admin_role or request.user.is_lecturer_role %}
+                  {% if resource.status == 'PUBLISHED' %}
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small">
+                      Published
+                    </span>
+                  {% elif resource.status == 'DRAFT' %}
+                    <span class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1 small">
+                      Draft
+                    </span>
+                  {% else %}
+                    <span class="badge bg-secondary-subtle text-secondary px-2 py-1 small">
+                      Archived
+                    </span>
+                  {% endif %}
+                {% endif %}
+
+                <!-- Resource Type Icon Tag -->
+                {% if resource.resource_type == 'DOCUMENT' %}
+                  <span class="badge badge-academic" style="background-color: var(--color-bg-subtle); color: var(--color-primary-saddle);" title="Document">
+                    <i class="fa-solid fa-file-pdf"></i>
+                  </span>
+                {% elif resource.resource_type == 'PRESENTATION' %}
+                  <span class="badge badge-academic" style="background-color: var(--color-bg-subtle); color: var(--color-accent-caramel);" title="Presentation">
+                    <i class="fa-solid fa-file-powerpoint"></i>
+                  </span>
+                {% elif resource.resource_type == 'EXTERNAL_LINK' %}
+                  <span class="badge badge-academic" style="background-color: var(--color-bg-subtle); color: var(--color-status-info);" title="Web Reference">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                  </span>
+                {% elif resource.resource_type == 'VIDEO_LINK' %}
+                  <span class="badge badge-academic" style="background-color: var(--color-bg-subtle); color: var(--color-primary-espresso);" title="Video Resource">
+                    <i class="fa-solid fa-video"></i>
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Card Body -->
+            <div class="card-body card-body-academic d-flex flex-column flex-grow-1 p-3">
+              {% if resource.module %}
+                <div class="small fw-semibold text-muted mb-1">
+                  <i class="fa-regular fa-folder me-1 text-muted"></i>{{ resource.module.title }}
+                </div>
+              {% endif %}
+
+              <h5 class="card-title h6 fw-bold mb-2">
+                <a href="{% url 'courseware:resource_detail' resource.pk %}" class="text-decoration-none" style="color: var(--color-primary-espresso);">
+                  {{ resource.title }}
+                </a>
+              </h5>
+
+              {% if resource.description %}
+                <p class="text-muted small mb-3 flex-grow-1">
+                  {{ resource.description|truncatewords:20 }}
+                </p>
+              {% else %}
+                <div class="flex-grow-1"></div>
+              {% endif %}
+
+              <!-- Metadata Row -->
+              <div class="d-flex align-items-center justify-content-between pt-2 border-top border-light-subtle small text-muted">
+                <div>
+                  {% if resource.has_file %}
+                    <span><i class="fa-solid fa-paperclip me-1"></i>{{ resource.file_size_display|default:"File" }}</span>
+                  {% elif resource.external_url %}
+                    <span><i class="fa-solid fa-link me-1"></i>Web Link</span>
+                  {% endif %}
+                </div>
+                <div class="text-end">
+                  <span title="{{ resource.created_at|date:'d M Y H:i' }}">
+                    <i class="fa-regular fa-clock me-1"></i>{{ resource.created_at|date:"d M Y" }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Footer / Actions -->
+            <div class="card-footer bg-white border-top-0 pt-0 pb-3 px-3 d-flex align-items-center justify-content-between gap-2">
+              <a href="{% url 'courseware:resource_detail' resource.pk %}" class="btn btn-outline-academic btn-sm flex-grow-1">
+                <i class="fa-regular fa-eye me-1"></i> View Details
+              </a>
+
+              {% if resource.has_file %}
+                <a href="{% url 'courseware:resource_download' resource.pk %}" class="btn btn-espresso btn-sm" title="Download Material">
+                  <i class="fa-solid fa-download"></i>
+                </a>
+              {% elif resource.external_url %}
+                <a href="{{ resource.external_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-academic btn-sm" title="Open Link">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+              {% endif %}
+
+              {% if request.user.is_admin_role or request.user.is_lecturer_role %}
+                <a href="{% url 'courseware:resource_edit' resource.pk %}" class="btn btn-light btn-sm text-secondary" title="Edit Resource">
+                  <i class="fa-solid fa-pen"></i>
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination Controls -->
+    {% if is_paginated %}
+      <nav aria-label="Courseware pagination" class="d-flex justify-content-center mt-4">
+        <ul class="pagination pagination-sm">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link text-dark" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">
+                &laquo; Previous
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">&laquo; Previous</span></li>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <li class="page-item active"><span class="page-link" style="background-color: var(--color-primary-espresso); border-color: var(--color-primary-espresso);">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+              <li class="page-item">
+                <a class="page-link text-dark" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">
+                  {{ num }}
+                </a>
+              </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link text-dark" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">
+                Next &raquo;
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+
+  {% else %}
+    <!-- Empty State -->
+    <div class="card card-academic shadow-sm text-center py-5 px-3">
+      <div class="card-body card-body-academic my-4">
+        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+             style="width: 72px; height: 72px; background-color: var(--color-bg-subtle); color: var(--color-primary-saddle);">
+          <i class="fa-solid fa-book-open fa-2x"></i>
+        </div>
+        <h4 class="h5 fw-bold mb-2" style="color: var(--color-primary-espresso);">No Learning Materials Found</h4>
+        <p class="text-muted small mx-auto" style="max-width: 480px;">
+          {% if query or selected_course or selected_type or selected_status %}
+            No resources match your active search or filter criteria. Try resetting the filters above.
+          {% elif request.user.is_student_role %}
+            None of your registered courses have published digital resources yet.
+          {% elif request.user.is_parent_role %}
+            Your linked student(s) do not currently have published materials available for their enrolled courses.
+          {% else %}
+            No resources have been published yet for your assigned courses. Click below to upload educational content.
+          {% endif %}
+        </p>
+
+        <div class="d-flex justify-content-center gap-2 mt-3">
+          {% if query or selected_course or selected_type or selected_status %}
+            <a href="{% url 'courseware:resource_list' %}" class="btn btn-outline-academic btn-sm">
+              <i class="fa-solid fa-rotate-left me-1"></i> Clear Filters
+            </a>
+          {% endif %}
+          {% if can_create %}
+            <a href="{% url 'courseware:resource_create' %}" class="btn btn-espresso btn-sm">
+              <i class="fa-solid fa-cloud-arrow-up me-1"></i> Upload Learning Material
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock content %}

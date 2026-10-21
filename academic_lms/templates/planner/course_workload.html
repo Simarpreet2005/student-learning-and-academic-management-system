@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Course Workload Analytics: {{ course.code }} | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'accounts:lecturer_dashboard' %}" class="text-espresso text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Course Workload</li>
+                </ol>
+            </nav>
+            <h1 class="h2 text-espresso fw-bold mb-1">
+                <i class="fa-solid fa-chart-pie text-caramel me-2"></i>{{ course.code }} — Deliverable Workload Analytics
+            </h1>
+            <p class="text-muted small mb-0">
+                Institutional deliverable schedule and student completion rates for <strong>{{ course.title }}</strong> ({{ course.credits }} Credits).
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="{% url 'quizzes:quiz_create' %}?course={{ course.id }}" class="btn btn-espresso btn-sm shadow-sm me-2">
+                <i class="fa-solid fa-plus me-1"></i>New Quiz
+            </a>
+            <a href="{% url 'quizzes:quiz_list' %}?course={{ course.id }}" class="btn btn-outline-espresso btn-sm shadow-sm">
+                <i class="fa-solid fa-list me-1"></i>Course Quizzes
+            </a>
+        </div>
+    </div>
+
+    <!-- Metric Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-academic border-0 shadow-sm p-3">
+                <div class="text-muted small">Enrolled Students</div>
+                <div class="h3 fw-bold text-espresso mb-0">{{ course_data.enrollment_count }}</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-academic border-0 shadow-sm p-3">
+                <div class="text-muted small">Total Deliverables</div>
+                <div class="h3 fw-bold text-espresso mb-0">{{ course_data.deliverable_count }}</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-academic border-0 shadow-sm p-3">
+                <div class="text-muted small">Internal Clashes (&le;48h)</div>
+                <div class="h3 fw-bold {% if course_data.internal_clusters %}text-terracotta{% else %}text-espresso{% endif %} mb-0">
+                    {{ course_data.internal_clusters|length }}
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-academic border-0 shadow-sm p-3">
+                <div class="text-muted small">Course Credits</div>
+                <div class="h3 fw-bold text-espresso mb-0">{{ course.credits }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cluster Warning if deliverables clash within this course -->
+    {% if course_data.internal_clusters %}
+    <div class="alert alert-warning border-0 shadow-sm mb-4 p-3 rounded-3" style="background-color: #FFF8E7; border-left: 5px solid var(--color-status-warning) !important;">
+        <div class="d-flex align-items-center">
+            <i class="fa-solid fa-triangle-exclamation fa-2x text-warning me-3"></i>
+            <div>
+                <h6 class="fw-bold mb-1 text-espresso">Internal Course Deadline Cluster Detected</h6>
+                <p class="small mb-0 text-muted">
+                    This course has {{ course_data.internal_clusters|length }} deliverable cluster(s) scheduled within 48 hours of each other. Spacing out your assignment cutoffs and quiz availability dates helps enrolled students pace their study time effectively.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Deliverables Roster -->
+    <div class="card card-academic border-0 shadow-sm">
+        <div class="card-header bg-subtle py-3 border-bottom d-flex align-items-center justify-content-between">
+            <h5 class="card-title text-espresso fw-bold mb-0">
+                <i class="fa-solid fa-calendar-check text-caramel me-2"></i>Scheduled Deliverables & Submission Progress
+            </h5>
+            <span class="badge bg-subtle text-espresso border">{{ course_data.deliverables|length }} Item{{ course_data.deliverables|length|pluralize }}</span>
+        </div>
+        <div class="card-body p-0">
+            {% if course_data.deliverables %}
+            <div class="table-responsive">
+                <table class="table table-hover table-academic mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 12%;">Type</th>
+                            <th style="width: 30%;">Title</th>
+                            <th style="width: 20%;">Scheduled Due Date</th>
+                            <th style="width: 18%;">Estimated Effort / Duration</th>
+                            <th style="width: 20%;">Completion Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in course_data.deliverables %}
+                        <tr>
+                            <td>
+                                {% if d.type == 'QUIZ' %}
+                                <span class="badge badge-academic-info px-2 py-1"><i class="fa-solid fa-clock me-1"></i>Quiz</span>
+                                {% else %}
+                                <span class="badge badge-academic-warning px-2 py-1"><i class="fa-solid fa-file-lines me-1"></i>Assignment</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="fw-bold text-espresso">{{ d.title }}</div>
+                                {% if not d.is_published %}
+                                <span class="badge bg-secondary" style="font-size: 0.65rem;">Draft / Unpublished</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if d.due_date %}
+                                <div class="fw-semibold text-espresso">{{ d.due_date|date:"M d, Y H:i" }}</div>
+                                <div class="small {% if d.is_overdue %}text-danger fw-semibold{% else %}text-muted{% endif %}">
+                                    {% if d.is_overdue %}Past Deadline{% else %}Upcoming{% endif %}
+                                </div>
+                                {% else %}
+                                <span class="badge bg-subtle text-muted">No Due Date</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if d.estimated_effort_hours %}
+                                <div class="text-espresso small fw-bold">
+                                    <i class="fa-regular fa-clock me-1 text-caramel"></i>{{ d.estimated_effort_hours }}h effort
+                                </div>
+                                {% endif %}
+                                {% if d.duration_minutes %}
+                                <div class="text-muted small">
+                                    <i class="fa-solid fa-stopwatch me-1 text-primary"></i>{{ d.duration_minutes }} min sitting
+                                </div>
+                                {% endif %}
+                                {% if not d.estimated_effort_hours and not d.duration_minutes %}
+                                <span class="text-muted small" style="font-style: italic;">Unspecified</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="small fw-semibold text-espresso mb-1">
+                                    {{ d.submissions_count }} / {{ course_data.enrollment_count }} completed
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {% if course_data.enrollment_count > 0 %}{% widthratio d.submissions_count course_data.enrollment_count 100 %}{% else %}0{% endif %}%;"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="fa-solid fa-calendar-xmark fa-3x text-muted mb-3 opacity-50"></i>
+                <h5 class="fw-bold text-espresso">No Deliverables Scheduled</h5>
+                <p class="small text-muted mb-0">Create assignments or quizzes to schedule deliverables for your students.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

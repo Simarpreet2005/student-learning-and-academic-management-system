@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Academic Workload Planner | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Breadcrumb & Actions -->
+    <div class="row align-items-center mb-4">
+        <div class="col-md-7">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-espresso text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Workload Planner</li>
+                </ol>
+            </nav>
+            <h1 class="h2 text-espresso fw-bold mb-1">
+                <i class="fa-solid fa-compass-drafting text-caramel me-2"></i>Smart Academic Workload Planner
+            </h1>
+            <p class="text-muted small mb-0">
+                Deterministic, rule-based pacing engine for <strong>{{ summary.student_name }}</strong>. Zero AI — 100% transparent algorithmic forecasting.
+            </p>
+        </div>
+        <div class="col-md-5 text-md-end mt-3 mt-md-0">
+            <a href="{% url 'planner:preferences' %}" class="btn btn-outline-espresso btn-sm shadow-sm me-2">
+                <i class="fa-solid fa-sliders me-1"></i>Configure Study Hours
+            </a>
+            <a href="{% url 'quizzes:quiz_list' %}" class="btn btn-espresso btn-sm shadow-sm">
+                <i class="fa-solid fa-list-check me-1"></i>Browse Quizzes
+            </a>
+        </div>
+    </div>
+
+    <!-- Study Hours Not Configured Notice -->
+    {% if not summary.is_configured %}
+    <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center p-3 mb-4 rounded-3" style="background-color: #FFF8E7; border-left: 5px solid var(--color-status-warning) !important;">
+        <i class="fa-solid fa-clock-rotate-left fa-2x text-warning me-3"></i>
+        <div class="flex-grow-1">
+            <h6 class="fw-bold mb-1 text-espresso">Weekly Study Hours Not Configured</h6>
+            <p class="small mb-0 text-muted">
+                You have not yet specified your daily study availability. The planner is organizing your tasks by deadline proximity and deliverable clustering without guessing your free time. Configure your weekly hours to unlock personalized time-utilization metrics and a day-by-day study schedule.
+            </p>
+        </div>
+        <div class="ms-3">
+            <a href="{% url 'planner:preferences' %}" class="btn btn-sm btn-espresso text-nowrap">
+                Set Study Budget
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Top Workload Status Banner -->
+    <div class="card card-academic border-0 shadow-sm mb-4" style="border-top: 4px solid {% if summary.workload_level == 'CONFLICT' %}var(--color-status-danger){% elif summary.workload_level == 'HEAVY' %}var(--color-status-warning){% elif summary.workload_level == 'MODERATE' %}var(--color-status-info){% else %}var(--color-status-success){% endif %};">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge {{ summary.workload_badge_class }} px-3 py-2 fs-6">
+                            <i class="fa-solid {% if summary.workload_level == 'CONFLICT' %}fa-triangle-exclamation{% elif summary.workload_level == 'HEAVY' %}fa-gauge-high{% elif summary.workload_level == 'MODERATE' %}fa-gauge{% else %}fa-circle-check{% endif %} me-1"></i>
+                            {{ summary.workload_label }} Workload
+                        </span>
+                        {% if summary.is_configured and summary.utilization_percentage is not None %}
+                        <span class="badge bg-subtle text-espresso border px-3 py-2">
+                            {{ summary.utilization_percentage }}% Capacity Utilization
+                        </span>
+                        {% endif %}
+                    </div>
+                    <p class="lead fs-6 text-espresso mb-0">
+                        {{ summary.workload_description }}
+                    </p>
+                </div>
+                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                    <div class="d-inline-flex gap-3 text-center">
+                        <div class="p-2 px-3 bg-subtle rounded border">
+                            <div class="h4 mb-0 fw-bold text-espresso">{{ summary.tasks_next_7_days }}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Due in 7 Days</div>
+                        </div>
+                        <div class="p-2 px-3 bg-subtle rounded border">
+                            <div class="h4 mb-0 fw-bold text-espresso">{{ summary.total_known_effort_hours }}h</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Known Effort</div>
+                        </div>
+                        <div class="p-2 px-3 bg-subtle rounded border">
+                            <div class="h4 mb-0 fw-bold {% if summary.clusters %}text-terracotta{% else %}text-espresso{% endif %}">
+                                {{ summary.clusters|length }}
+                            </div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Deadline Clusters</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cluster / Conflict Alerts (If any) -->
+    {% if summary.clusters %}
+    <div class="card card-academic border-0 shadow-sm mb-4">
+        <div class="card-header bg-subtle py-3 border-bottom d-flex align-items-center">
+            <h5 class="card-title text-espresso fw-bold mb-0">
+                <i class="fa-solid fa-layer-group text-terracotta me-2"></i>Overlapping Deadline Clusters (Within 48 Hours)
+            </h5>
+            <span class="badge badge-academic-danger ms-auto">{{ summary.clusters|length }} Cluster{{ summary.clusters|length|pluralize }} Detected</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-academic mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Severity</th>
+                            <th style="width: 25%;">Time Window (Span)</th>
+                            <th style="width: 45%;">Conflicting Deliverables</th>
+                            <th style="width: 15%;" class="text-center">Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in summary.clusters %}
+                        <tr>
+                            <td>
+                                {% if c.severity == 'CRITICAL' %}
+                                <span class="badge badge-academic-danger px-2 py-1"><i class="fa-solid fa-bolt me-1"></i>Critical (4+ Tasks)</span>
+                                {% elif c.severity == 'HEAVY' %}
+                                <span class="badge badge-academic-warning px-2 py-1"><i class="fa-solid fa-triangle-exclamation me-1"></i>Heavy (3 Tasks)</span>
+                                {% else %}
+                                <span class="badge badge-academic-info px-2 py-1"><i class="fa-solid fa-circle-info me-1"></i>Moderate (2 Tasks)</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-espresso">{{ c.start_time|date:"M d, H:i" }} &rarr; {{ c.end_time|date:"M d, H:i" }}</div>
+                                <div class="text-muted small">Span: {{ c.span_hours }} hours</div>
+                            </td>
+                            <td>
+                                <ul class="list-unstyled mb-0 small">
+                                    {% for title in c.task_titles %}
+                                    <li><i class="fa-solid fa-circle-dot text-caramel me-1" style="font-size: 0.6rem;"></i>{{ title }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td class="text-center fw-bold fs-6 text-espresso">
+                                {{ c.task_count }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 7-Day Study Schedule (When configured) -->
+    {% if summary.schedule %}
+    <div class="card card-academic border-0 shadow-sm mb-4">
+        <div class="card-header bg-subtle py-3 border-bottom d-flex align-items-center justify-content-between">
+            <h5 class="card-title text-espresso fw-bold mb-0">
+                <i class="fa-solid fa-calendar-week text-caramel me-2"></i>Deterministic 7-Day Study Schedule
+            </h5>
+            <div class="small text-muted">
+                Weekly Budget: <strong>{{ summary.schedule.total_available_hours }}h</strong> | Allocated: <strong>{{ summary.schedule.total_allocated_hours }}h</strong>
+            </div>
+        </div>
+        <div class="card-body p-3">
+            {% if summary.schedule.has_deficit %}
+            <div class="alert alert-danger border-0 py-2 px-3 small mb-3 rounded-2">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                <strong>Time Deficit Warning:</strong> Total required effort exceeds your 7-day study budget by <strong>{{ summary.schedule.deficit_hours }} hours</strong>. High-urgency tasks have been prioritized first.
+            </div>
+            {% endif %}
+
+            <div class="row g-2">
+                {% for day in summary.schedule.days %}
+                <div class="col-md-6 col-lg">
+                    <div class="p-3 rounded border h-100 {% if day.is_fully_booked %}bg-subtle{% else %}bg-surface{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold text-espresso">{{ day.weekday_name }}</span>
+                            <span class="badge bg-subtle text-muted border" style="font-size: 0.7rem;">{{ day.date|date:"M d" }}</span>
+                        </div>
+                        <div class="small mb-2">
+                            <span class="text-muted">Available:</span> <strong>{{ day.available_hours }}h</strong> | <span class="text-muted">Allocated:</span> <strong>{{ day.allocated_hours }}h</strong>
+                        </div>
+
+                        {% if day.sessions %}
+                        <div class="d-flex flex-column gap-2 mt-2">
+                            {% for sess in day.sessions %}
+                            <div class="p-2 rounded bg-surface border shadow-none" style="border-left: 3px solid var(--color-accent-caramel) !important; font-size: 0.75rem;">
+                                <div class="fw-bold text-espresso text-truncate" title="{{ sess.task_title }}">
+                                    {{ sess.course_code }}: {{ sess.task_title }}
+                                </div>
+                                <div class="d-flex justify-content-between text-muted mt-1">
+                                    <span><i class="fa-regular fa-clock me-1"></i>{{ sess.allocated_hours }}h session</span>
+                                    <span class="text-truncate ms-1" style="max-width: 90px;" title="{{ sess.notes }}">{{ sess.notes }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-3 small" style="font-style: italic;">
+                            No sessions scheduled
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Prioritized Upcoming Tasks Table -->
+    <div class="card card-academic border-0 shadow-sm mb-4">
+        <div class="card-header bg-subtle py-3 border-bottom d-flex align-items-center justify-content-between">
+            <h5 class="card-title text-espresso fw-bold mb-0">
+                <i class="fa-solid fa-list-ol text-caramel me-2"></i>Prioritized Tasks & Upcoming Deliverables
+            </h5>
+            <span class="badge bg-subtle text-espresso border">{{ summary.total_pending_tasks }} Outstanding Task{{ summary.total_pending_tasks|pluralize }}</span>
+        </div>
+        <div class="card-body p-0">
+            {% if summary.prioritized_tasks %}
+            <div class="table-responsive">
+                <table class="table table-hover table-academic mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 12%;">Priority</th>
+                            <th style="width: 25%;">Task & Course</th>
+                            <th style="width: 20%;">Actual Deadline</th>
+                            <th style="width: 15%;">Effort / Duration</th>
+                            <th style="width: 28%;">Priority Explanation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in summary.prioritized_tasks %}
+                        <tr class="{% if t.is_overdue %}table-danger{% elif t.priority_level == 'CRITICAL' %}table-warning{% endif %}">
+                            <td>
+                                {% if t.priority_level == 'OVERDUE' %}
+                                <span class="badge badge-academic-danger px-2 py-1"><i class="fa-solid fa-skull-crossbones me-1"></i>OVERDUE</span>
+                                {% elif t.priority_level == 'CRITICAL' %}
+                                <span class="badge badge-academic-danger px-2 py-1"><i class="fa-solid fa-triangle-exclamation me-1"></i>CRITICAL</span>
+                                {% elif t.priority_level == 'HIGH' %}
+                                <span class="badge badge-academic-warning px-2 py-1"><i class="fa-solid fa-angles-up me-1"></i>HIGH</span>
+                                {% elif t.priority_level == 'MEDIUM' %}
+                                <span class="badge badge-academic-info px-2 py-1"><i class="fa-solid fa-angle-up me-1"></i>MEDIUM</span>
+                                {% elif t.priority_level == 'UNSCHEDULED' %}
+                                <span class="badge bg-subtle text-muted border px-2 py-1">UNSCHEDULED</span>
+                                {% else %}
+                                <span class="badge badge-academic-success px-2 py-1"><i class="fa-solid fa-minus me-1"></i>LOW</span>
+                                {% endif %}
+                                {% if t.is_in_cluster %}
+                                <div class="mt-1">
+                                    <span class="badge bg-light text-terracotta border" style="font-size: 0.65rem;" title="Due in a cluster within 48h">
+                                        <i class="fa-solid fa-layer-group me-1"></i>Cluster
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="fw-bold text-espresso">
+                                    <i class="fa-solid {% if t.task_type == 'QUIZ' %}fa-clock text-primary{% else %}fa-file-lines text-caramel{% endif %} me-1"></i>
+                                    {{ t.title }}
+                                </div>
+                                <div class="small text-muted">
+                                    <span class="badge bg-subtle text-espresso border me-1">{{ t.course_code }}</span>
+                                    {{ t.course_title }} ({{ t.course_credits }} credits)
+                                </div>
+                            </td>
+                            <td>
+                                {% if t.deadline %}
+                                <div class="fw-semibold text-espresso">{{ t.deadline|date:"M d, Y H:i" }}</div>
+                                <div class="small {% if t.is_overdue %}text-danger fw-bold{% elif t.days_remaining <= 1.0 %}text-danger fw-semibold{% elif t.days_remaining <= 3.0 %}text-warning fw-semibold{% else %}text-muted{% endif %}">
+                                    {% if t.is_overdue %}
+                                    Passed {{ t.days_remaining|cut:"-" }} days ago
+                                    {% elif t.days_remaining <= 1.0 %}
+                                    Due in {{ t.hours_remaining }} hours
+                                    {% else %}
+                                    Due in {{ t.days_remaining }} days
+                                    {% endif %}
+                                </div>
+                                {% else %}
+                                <span class="badge bg-subtle text-muted">No Deadline Specified</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if t.has_estimated_effort %}
+                                <div class="text-espresso fw-semibold">
+                                    <i class="fa-regular fa-clock me-1 text-caramel"></i>{{ t.estimated_effort_hours }}h
+                                </div>
+                                <span class="badge bg-subtle text-muted" style="font-size: 0.7rem;">Lecturer Estimate</span>
+                                {% elif t.has_actual_duration %}
+                                <div class="text-espresso fw-semibold">
+                                    <i class="fa-solid fa-stopwatch me-1 text-primary"></i>{{ t.actual_duration_minutes }} min
+                                </div>
+                                <span class="badge bg-subtle text-muted" style="font-size: 0.7rem;">Quiz Sitting Duration</span>
+                                {% else %}
+                                <span class="text-muted small" style="font-style: italic;">
+                                    Effort unestimated
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="small text-muted">
+                                    {{ t.priority_explanation }}
+                                </div>
+                                {% if t.task_type == 'QUIZ' %}
+                                <a href="{% url 'quizzes:quiz_detail' t.source_id %}" class="btn btn-sm btn-link p-0 text-decoration-none mt-1" style="font-size: 0.8rem;">
+                                    View Quiz <i class="fa-solid fa-arrow-right ms-1"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="fa-solid fa-circle-check fa-3x text-success mb-3 opacity-50"></i>
+                <h5 class="fw-bold text-espresso">No Pending Tasks</h5>
+                <p class="small text-muted mb-0">You are completely caught up! No active assignments or upcoming quizzes were found.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Completed Deliverables (Excluded from Active Workload) -->
+    {% if summary.completed_tasks %}
+    <div class="card card-academic border-0 shadow-sm">
+        <div class="card-header bg-subtle py-3 border-bottom d-flex align-items-center justify-content-between">
+            <h6 class="card-title text-espresso fw-bold mb-0">
+                <i class="fa-solid fa-check-double text-success me-2"></i>Completed Deliverables (Excluded from Active Workload)
+            </h6>
+            <span class="badge badge-academic-success">{{ summary.completed_tasks|length }} Completed</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-academic mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">Deliverable</th>
+                            <th style="width: 25%;">Course</th>
+                            <th style="width: 20%;">Deadline</th>
+                            <th style="width: 20%;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in summary.completed_tasks %}
+                        <tr class="opacity-75">
+                            <td>
+                                <span class="fw-semibold text-espresso">{{ t.title }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-subtle text-espresso border">{{ t.course_code }}</span> {{ t.course_title }}
+                            </td>
+                            <td class="text-muted small">
+                                {{ t.deadline|date:"M d, Y"|default:"Self-paced" }}
+                            </td>
+                            <td>
+                                <span class="badge badge-academic-success">
+                                    <i class="fa-solid fa-check me-1"></i>{{ t.completion_status|title }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

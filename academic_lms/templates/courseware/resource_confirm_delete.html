@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Deactivate Resource | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-lg-4">
+
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'courseware:resource_list' %}">Courseware &amp; Materials</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'courseware:resource_detail' resource.pk %}">{{ resource.title }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Deactivate</li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+      <div class="card card-academic shadow-sm border-danger-subtle">
+        <div class="card-header-academic py-3 px-4 bg-danger-subtle text-danger">
+          <h5 class="h6 fw-bold mb-0">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>Confirm Resource Deactivation
+          </h5>
+        </div>
+
+        <div class="card-body card-body-academic p-4">
+          <p class="mb-3">
+            Are you sure you want to deactivate the learning resource:
+          </p>
+
+          <div class="p-3 rounded-3 mb-4" style="background-color: var(--color-bg-subtle);">
+            <div class="fw-bold mb-1" style="color: var(--color-primary-espresso);">{{ resource.title }}</div>
+            <div class="small text-muted mb-1">
+              <strong>Course:</strong> {{ resource.course.code }} — {{ resource.course.title }}
+            </div>
+            <div class="small text-muted">
+              <strong>Type:</strong> {{ resource.get_resource_type_display }} &bull;
+              <strong>Status:</strong> {{ resource.get_status_display }}
+            </div>
+          </div>
+
+          <div class="alert alert-warning small mb-4" role="alert">
+            <i class="fa-solid fa-circle-info me-1"></i>
+            <strong>Preservation Policy:</strong> Deactivating this resource hides it from students and parents. Physical files and historical records are preserved in the institutional database.
+          </div>
+
+          <form method="post">
+            {% csrf_token %}
+            <div class="d-flex align-items-center justify-content-between">
+              <a href="{% url 'courseware:resource_detail' resource.pk %}" class="btn btn-outline-academic btn-sm">
+                Cancel
+              </a>
+              <button type="submit" class="btn btn-danger btn-sm px-4">
+                <i class="fa-solid fa-trash-can me-1"></i> Yes, Deactivate Resource
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock content %}

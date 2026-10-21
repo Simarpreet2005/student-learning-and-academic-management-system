@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Parent–Student Linkages | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4">
+
+  <!-- Page Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h1 class="h3 fw-bold mb-1" style="color: var(--color-primary-espresso);">
+        <i class="fa-solid fa-network-wired me-2"></i>Parent–Student Linkages
+      </h1>
+      <p class="text-muted mb-0">Manage all parent-to-student access relationships.</p>
+    </div>
+    <a href="{% url 'accounts:admin_relationship_create' %}" class="btn btn-espresso btn-sm">
+      <i class="fa-solid fa-plus me-1"></i> Add Linkage
+    </a>
+  </div>
+
+  <!-- Relationships Table -->
+  <div class="card card-academic shadow-sm">
+    <div class="card-body card-body-academic p-0">
+      {% if relationships %}
+        <div class="table-responsive">
+          <table class="table table-academic mb-0">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Parent</th>
+                <th>Student</th>
+                <th>Student ID</th>
+                <th>Relationship</th>
+                <th>Date Created</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for rel in relationships %}
+              <tr>
+                <td class="text-muted small">{{ forloop.counter }}</td>
+                <td>
+                  <div class="fw-semibold">{{ rel.parent.get_full_name|default:rel.parent.email }}</div>
+                  <div class="text-muted small">{{ rel.parent.email }}</div>
+                </td>
+                <td>
+                  <div class="fw-semibold">{{ rel.student.get_full_name|default:rel.student.email }}</div>
+                  <div class="text-muted small">{{ rel.student.email }}</div>
+                </td>
+                <td>
+                  <span class="text-muted small">
+                    {% if rel.student.student_profile %}{{ rel.student.student_profile.student_id }}{% else %}—{% endif %}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge badge-academic" style="background:var(--color-bg-subtle);color:var(--color-primary-saddle);">
+                    {{ rel.get_relationship_type_display }}
+                  </span>
+                </td>
+                <td class="text-muted small">{{ rel.created_at|date:"d M Y" }}</td>
+                <td class="text-center">
+                  <a href="{% url 'accounts:admin_relationship_delete' rel.pk %}"
+                     class="btn btn-sm"
+                     style="color:#C0392B; border-color:#C0392B; background:transparent;"
+                     title="Remove linkage">
+                    <i class="fa-solid fa-trash-can me-1"></i> Remove
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="d-flex flex-column align-items-center justify-content-center py-5 text-center">
+          <i class="fa-solid fa-link-slash fa-2x mb-3 text-muted"></i>
+          <p class="text-muted mb-1">No parent–student linkages have been created yet.</p>
+          <a href="{% url 'accounts:admin_relationship_create' %}" class="btn btn-espresso btn-sm mt-2">
+            <i class="fa-solid fa-plus me-1"></i> Create First Linkage
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock content %}

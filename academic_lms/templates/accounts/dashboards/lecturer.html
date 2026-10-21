@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lecturer Dashboard | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4">
+
+  <!-- Page Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h1 class="h3 fw-bold mb-1" style="color: var(--color-primary-espresso);">
+        <i class="fa-solid fa-chalkboard-user me-2"></i>Lecturer Dashboard
+      </h1>
+      <p class="text-muted mb-0">Welcome back, {{ request.user.get_full_name|default:request.user.email }}. Manage course allocations, submissions, grading queues, and schedules.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'quizzes:quiz_create' %}" class="btn btn-espresso btn-sm">
+        <i class="fa-solid fa-plus me-1"></i> New Quiz
+      </a>
+      <a href="{% url 'courseware:resource_create' %}" class="btn btn-outline-academic btn-sm">
+        <i class="fa-solid fa-cloud-arrow-up me-1"></i> Upload Material
+      </a>
+      <a href="{% url 'core:calendar' %}" class="btn btn-outline-academic btn-sm">
+        <i class="fa-solid fa-calendar-days me-1"></i> Calendar
+      </a>
+      <a href="{% url 'accounts:profile' %}" class="btn btn-outline-academic btn-sm">
+        <i class="fa-solid fa-id-card me-1"></i> My Profile
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI Cards Row -->
+  <div class="row g-3 mb-4">
+    <!-- Assigned Courses -->
+    <div class="col-sm-6 col-xl-3">
+      <div class="card card-academic h-100 shadow-sm">
+        <div class="card-body card-body-academic d-flex align-items-center gap-3">
+          <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:50px;height:50px;background:linear-gradient(135deg,var(--color-primary-espresso),var(--color-primary-saddle));">
+            <i class="fa-solid fa-book-bookmark fa-lg text-white"></i>
+          </div>
+          <div>
+            <div class="h3 fw-bold mb-0" style="color: var(--color-primary-espresso);">{{ total_courses }}</div>
+            <div class="small text-muted">Allocated Courses</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enrolled Students -->
+    <div class="col-sm-6 col-xl-3">
+      <div class="card card-academic h-100 shadow-sm">
+        <div class="card-body card-body-academic d-flex align-items-center gap-3">
+          <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:50px;height:50px;background:linear-gradient(135deg,#2C6E49,#52B788);">
+            <i class="fa-solid fa-users fa-lg text-white"></i>
+          </div>
+          <div>
+            <div class="h3 fw-bold mb-0" style="color: #2C6E49;">{{ total_students_enrolled }}</div>
+            <div class="small text-muted">Active Students</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Grading Queue -->
+    <div class="col-sm-6 col-xl-3">
+      <div class="card card-academic h-100 shadow-sm">
+        <div class="card-body card-body-academic d-flex align-items-center gap-3">
+          <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:50px;height:50px;background:linear-gradient(135deg,#DC2626,#EF4444);">
+            <i class="fa-solid fa-pen-ruler fa-lg text-white"></i>
+          </div>
+          <div>
+            <div class="h3 fw-bold mb-0" style="color: #DC2626;">{{ total_grading_pending }}</div>
+            <div class="small text-muted">Pending Evaluation</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Assessments -->
+    <div class="col-sm-6 col-xl-3">
+      <div class="card card-academic h-100 shadow-sm">
+        <div class="card-body card-body-academic d-flex align-items-center gap-3">
+          <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:50px;height:50px;background:linear-gradient(135deg,#7D3C98,#A569BD);">
+            <i class="fa-solid fa-list-check fa-lg text-white"></i>
+          </div>
+          <div>
+            <div class="h3 fw-bold mb-0" style="color: #7D3C98;">
+              {{ upcoming_assignments|length|add:upcoming_quizzes|length }}
+            </div>
+            <div class="small text-muted">Course Deliverables</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: Pending Grading & Courses -->
+    <div class="col-lg-8">
+
+      <!-- Pending Grading Desk -->
+      <div class="card card-academic shadow-sm mb-4">
+        <div class="card-header-academic d-flex align-items-center justify-content-between">
+          <span><i class="fa-solid fa-clipboard-check me-2"></i>Grading Desk &amp; Manual Review Queue</span>
+          <span class="badge {% if total_grading_pending > 0 %}bg-danger{% else %}bg-success{% endif %}">
+            {{ total_grading_pending }} Pending
+          </span>
+        </div>
+        <div class="card-body card-body-academic p-0">
+          {% if pending_assignments_preview or pending_quizzes_preview %}
+            <div class="table-responsive">
+              <table class="table table-academic mb-0 small">
+                <thead>
+                  <tr>
+                    <th>Deliverable</th>
+                    <th>Course</th>
+                    <th>Student</th>
+                    <th>Submitted</th>
+                    <th>Type</th>
+                    <th class="text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for sub in pending_assignments_preview %}
+                    <tr>
+                      <td class="fw-semibold">{{ sub.assignment.title }}</td>
+                      <td>{{ sub.assignment.course.code }}</td>
+                      <td>{{ sub.student.get_full_name|default:sub.student.email }}</td>
+                      <td class="text-muted">{{ sub.submitted_at|date:"M d, H:i" }}</td>
+                      <td><span class="badge bg-primary">Assignment</span></td>
+                      <td class="text-center">
+                        <a href="{% url 'planner:course_workload' sub.assignment.course.pk %}" class="btn btn-outline-academic btn-sm py-0 px-2" style="font-size:0.75rem;">
+                          Course Workload
+                        </a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                  {% for attempt in pending_quizzes_preview %}
+                    <tr>
+                      <td class="fw-semibold">{{ attempt.quiz.title }}</td>
+                      <td>{{ attempt.quiz.course.code }}</td>
+                      <td>{{ attempt.student.get_full_name|default:attempt.student.email }}</td>
+                      <td class="text-muted">{{ attempt.submitted_at|date:"M d, H:i" }}</td>
+                      <td><span class="badge bg-warning text-dark">Short-Answer Quiz</span></td>
+                      <td class="text-center">
+                        <a href="{% url 'quizzes:attempt_review' attempt.pk %}" class="btn btn-espresso btn-sm py-0 px-2" style="font-size:0.75rem;">
+                          Grade Responses
+                        </a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="text-center py-4 text-muted small">
+              <i class="fa-solid fa-circle-check text-success fa-2x mb-2"></i>
+              <p class="mb-0">All submitted work and quiz attempts are currently graded!</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Allocated Courses and Workload Overview -->
+      <div class="card card-academic shadow-sm mb-4">
+        <div class="card-header-academic d-flex align-items-center justify-content-between">
+          <span><i class="fa-solid fa-book-open me-2"></i>Allocated Courses &amp; Workload Indicators</span>
+          <a href="{% url 'planner:dashboard' %}" class="btn btn-outline-academic btn-sm">Workload Overview &raquo;</a>
+        </div>
+        <div class="card-body card-body-academic p-0">
+          {% if course_summaries %}
+            <div class="table-responsive">
+              <table class="table table-academic mb-0 small">
+                <thead>
+                  <tr>
+                    <th>Course Code &amp; Title</th>
+                    <th>Semester</th>
+                    <th>Enrolled</th>
+                    <th>Deliverables</th>
+                    <th>Clashes / Clusters</th>
+                    <th class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in course_summaries %}
+                    <tr>
+                      <td>
+                        <div class="fw-bold" style="color:var(--color-primary-espresso);">{{ item.allocation.course.code }}</div>
+                        <div class="text-muted text-truncate" style="max-width: 200px;">{{ item.allocation.course.title }}</div>
+                      </td>
+                      <td>{{ item.allocation.semester.name|default:"Active Term" }}</td>
+                      <td>
+                        <span class="badge bg-light text-dark border">{{ item.workload.enrollment_count }} Students</span>
+                      </td>
+                      <td>
+                        <span class="badge bg-light text-dark border">{{ item.workload.deliverable_count }} Deliverables</span>
+                      </td>
+                      <td>
+                        {% if item.workload.internal_clusters %}
+                          <span class="badge bg-warning text-dark">
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i>{{ item.workload.internal_clusters|length }} Clashes
+                          </span>
+                        {% else %}
+                          <span class="badge bg-success text-white">None</span>
+                        {% endif %}
+                      </td>
+                      <td class="text-center">
+                        <div class="d-flex justify-content-center gap-1">
+                          <a href="{% url 'planner:course_workload' item.allocation.course.pk %}" class="btn btn-outline-academic btn-sm py-0 px-2" title="Workload Analysis">
+                            <i class="fa-solid fa-chart-simple"></i>
+                          </a>
+                          <a href="{% url 'courseware:resource_list' %}" class="btn btn-outline-academic btn-sm py-0 px-2" title="Courseware Resources">
+                            <i class="fa-solid fa-folder"></i>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="text-center py-4 text-muted small">
+              <i class="fa-solid fa-chalkboard fa-2x mb-2 text-muted"></i>
+              <p class="mb-0">No active course allocations assigned to your profile yet.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Recent Quizzes & Academic Calendar -->
+    <div class="col-lg-4">
+
+      <!-- Course Quizzes Quick Access -->
+      <div class="card card-academic shadow-sm mb-4">
+        <div class="card-header-academic d-flex align-items-center justify-content-between">
+          <span><i class="fa-solid fa-list-check me-2"></i>Recent Quizzes</span>
+          <a href="{% url 'quizzes:quiz_list' %}" class="btn btn-outline-academic btn-sm">All Quizzes &raquo;</a>
+        </div>
+        <div class="card-body card-body-academic p-0">
+          {% if upcoming_quizzes %}
+            <div class="list-group list-group-flush">
+              {% for q in upcoming_quizzes %}
+                <div class="list-group-item py-2 px-3 small">
+                  <div class="d-flex align-items-center justify-content-between mb-1">
+                    <span class="fw-semibold text-dark text-truncate" style="max-width: 180px;">{{ q.title }}</span>
+                    <span class="badge {% if q.status == 'PUBLISHED' %}bg-success{% elif q.status == 'DRAFT' %}bg-secondary{% else %}bg-dark{% endif %}" style="font-size:0.7rem;">
+                      {{ q.get_status_display }}
+                    </span>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-between text-muted" style="font-size: 0.75rem;">
+                    <span>{{ q.course.code }} &bull; {{ q.duration_minutes }}m</span>
+                    <a href="{% url 'quizzes:quiz_detail' q.pk %}" class="text-decoration-none">Manage &raquo;</a>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-3 text-muted small px-3">
+              No quizzes created for your courses yet.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Institutional Events -->
+      <div class="card card-academic shadow-sm mb-4">
+        <div class="card-header-academic d-flex align-items-center justify-content-between">
+          <span><i class="fa-solid fa-calendar-days me-2"></i>Institutional Events</span>
+          <a href="{% url 'core:calendar' %}" class="btn btn-outline-academic btn-sm">Full Calendar &raquo;</a>
+        </div>
+        <div class="card-body card-body-academic p-0">
+          {% if upcoming_events %}
+            <div class="list-group list-group-flush">
+              {% for evt in upcoming_events %}
+                <div class="list-group-item py-2 px-3 small">
+                  <div class="d-flex align-items-center justify-content-between mb-1">
+                    <span class="badge bg-secondary" style="font-size: 0.7rem;">{{ evt.get_event_type_display }}</span>
+                    <span class="text-muted" style="font-size: 0.75rem;">{{ evt.start_date|date:"M d, Y" }}</span>
+                  </div>
+                  <div class="fw-semibold text-dark">{{ evt.title }}</div>
+                  {% if evt.location %}
+                    <div class="text-muted" style="font-size:0.75rem;"><i class="fa-solid fa-location-dot me-1"></i>{{ evt.location }}</div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-3 text-muted small px-3">
+              No institutional events scheduled at this time.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock content %}

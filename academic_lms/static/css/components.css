@@ -1,0 +1,466 @@
+/* ==========================================================================
+   Academic LMS — UI Component Styles
+   ========================================================================== */
+
+/* 1. Header & Navigation */
+.navbar-academic {
+  background-color: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: 0.85rem 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.navbar-brand-academic {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-family-heading);
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: var(--color-primary-espresso) !important;
+  letter-spacing: -0.03em;
+}
+
+.brand-icon-box {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, var(--color-primary-espresso), var(--color-primary-saddle));
+  color: #FFFFFF;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 6px rgba(44, 24, 16, 0.2);
+}
+
+.nav-link-academic {
+  font-family: var(--font-family-heading);
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--color-text-secondary) !important;
+  padding: 0.5rem 0.9rem !important;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.nav-link-academic:hover,
+.nav-link-academic.active {
+  color: var(--color-primary-espresso) !important;
+  background-color: var(--color-bg-subtle);
+}
+
+.nav-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 2. Cards */
+.card-academic {
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  overflow: hidden;
+}
+
+.card-academic:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+.card-academic-interactive:hover {
+  transform: translateY(-2px);
+}
+
+.card-header-academic {
+  background-color: var(--color-bg-subtle);
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: 1rem 1.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-header-academic h5,
+.card-header-academic h6 {
+  margin: 0;
+  font-weight: 700;
+}
+
+.card-body-academic {
+  padding: 1.35rem;
+}
+
+/* 3. Stat Cards */
+.stat-card {
+  padding: 1.35rem;
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+}
+
+.stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.stat-icon-espresso { background-color: #EFEBE9; color: var(--color-primary-espresso); }
+.stat-icon-saddle   { background-color: #D7CCC8; color: var(--color-primary-saddle); }
+.stat-icon-caramel  { background-color: #FFF3E0; color: var(--color-accent-caramel); }
+.stat-icon-success  { background-color: var(--color-status-success-bg); color: var(--color-status-success); }
+.stat-icon-danger   { background-color: var(--color-status-danger-bg); color: var(--color-status-danger); }
+
+.stat-value {
+  font-family: var(--font-family-heading);
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--color-primary-espresso);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* 4. Badges & Pills */
+.badge-academic {
+  padding: 0.35em 0.75em;
+  font-weight: 600;
+  font-size: 0.78rem;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.badge-role-admin     { background-color: #2C1810; color: #FFFFFF; }
+.badge-role-lecturer  { background-color: #5D4037; color: #FFFFFF; }
+.badge-role-student   { background-color: #A06D3B; color: #FFFFFF; }
+.badge-role-parent    { background-color: #B85D38; color: #FFFFFF; }
+
+.badge-status-balanced { background-color: var(--color-status-success-bg); color: var(--color-status-success); border: 1px solid #C8E6C9; }
+.badge-status-moderate { background-color: var(--color-status-warning-bg); color: var(--color-status-warning); border: 1px solid #FFE082; }
+.badge-status-heavy    { background-color: #FFF3E0; color: #E65100; border: 1px solid #FFCC80; }
+.badge-status-crunch   { background-color: var(--color-status-danger-bg); color: var(--color-status-danger); border: 1px solid #FFCDD2; }
+
+/* 5. Buttons */
+.btn-espresso {
+  background-color: var(--color-primary-espresso);
+  color: #FFFFFF;
+  border: 1px solid var(--color-primary-espresso);
+  font-family: var(--font-family-heading);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1.2rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-espresso:hover {
+  background-color: var(--color-primary-espresso-hover);
+  border-color: var(--color-primary-espresso-hover);
+  color: #FFFFFF;
+}
+
+.btn-saddle {
+  background-color: var(--color-primary-saddle);
+  color: #FFFFFF;
+  border: 1px solid var(--color-primary-saddle);
+  font-family: var(--font-family-heading);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1.2rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-saddle:hover {
+  background-color: var(--color-primary-saddle-hover);
+  border-color: var(--color-primary-saddle-hover);
+  color: #FFFFFF;
+}
+
+.btn-caramel {
+  background-color: var(--color-accent-caramel);
+  color: #FFFFFF;
+  border: 1px solid var(--color-accent-caramel);
+  font-family: var(--font-family-heading);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1.2rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-caramel:hover {
+  background-color: var(--color-accent-caramel-hover);
+  border-color: var(--color-accent-caramel-hover);
+  color: #FFFFFF;
+}
+
+.btn-outline-academic {
+  background-color: transparent;
+  color: var(--color-primary-espresso);
+  border: 1px solid var(--color-border-strong);
+  font-family: var(--font-family-heading);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1.2rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-outline-academic:hover {
+  background-color: var(--color-bg-subtle);
+  border-color: var(--color-primary-mocha);
+  color: var(--color-primary-espresso);
+}
+
+/* 6. Polished Tables */
+.table-academic-wrapper {
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.table-academic {
+  margin-bottom: 0;
+  color: var(--color-text-main);
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.table-academic thead th {
+  background-color: var(--color-bg-subtle);
+  color: var(--color-primary-espresso);
+  font-family: var(--font-family-heading);
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.9rem 1.2rem;
+  border-bottom: 1px solid var(--color-border-strong);
+  white-space: nowrap;
+}
+
+.table-academic tbody td {
+  padding: 0.95rem 1.2rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-size: 0.92rem;
+}
+
+.table-academic tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table-academic tbody tr:hover {
+  background-color: #FAF6F2;
+}
+
+/* 7. Forms & Inputs */
+.form-label-academic {
+  font-family: var(--font-family-heading);
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--color-primary-espresso);
+  margin-bottom: 0.4rem;
+}
+
+.form-control-academic,
+.form-select-academic {
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-main);
+  padding: 0.55rem 0.9rem;
+  font-size: 0.93rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-control-academic:focus,
+.form-select-academic:focus {
+  border-color: var(--color-accent-caramel);
+  box-shadow: 0 0 0 3px rgba(160, 109, 59, 0.18);
+  outline: none;
+}
+
+/* 8. Alert Callouts */
+.alert-academic {
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.25rem;
+  border: 1px solid transparent;
+  border-left-width: 4px;
+  font-size: 0.92rem;
+}
+
+.alert-academic-info {
+  background-color: var(--color-status-info-bg);
+  border-color: #B2D8D8;
+  border-left-color: var(--color-status-info);
+  color: #1F4245;
+}
+
+.alert-academic-success {
+  background-color: var(--color-status-success-bg);
+  border-color: #C8E6C9;
+  border-left-color: var(--color-status-success);
+  color: #23432A;
+}
+
+.alert-academic-warning {
+  background-color: var(--color-status-warning-bg);
+  border-color: #FFE082;
+  border-left-color: var(--color-status-warning);
+  color: #634300;
+}
+
+.alert-academic-danger {
+  background-color: var(--color-status-danger-bg);
+  border-color: #FFCDD2;
+  border-left-color: var(--color-status-danger);
+  color: #5E1819;
+}
+
+/* 9. Breadcrumbs */
+.breadcrumb-academic {
+  padding: 0.5rem 0;
+  margin-bottom: 1.25rem;
+  font-size: 0.88rem;
+  font-family: var(--font-family-heading);
+  font-weight: 500;
+}
+
+.breadcrumb-academic a {
+  color: var(--color-text-muted);
+}
+
+.breadcrumb-academic a:hover {
+  color: var(--color-primary-espresso);
+}
+
+.breadcrumb-academic .breadcrumb-item.active {
+  color: var(--color-primary-espresso);
+  font-weight: 600;
+}
+
+/* 10. Footer */
+.footer-academic {
+  background-color: var(--color-bg-surface);
+  border-top: 1px solid var(--color-border-subtle);
+  padding: 2rem 0;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  margin-top: 4rem;
+}
+
+/* ==========================================================================
+   11. Academic LMS Utilities & Badge Semantic Tokens
+   ========================================================================== */
+
+/* Utility Text Colors (Brown-and-Cream hierarchy) */
+.text-espresso {
+  color: var(--color-primary-espresso) !important;
+}
+
+.text-saddle {
+  color: var(--color-primary-saddle) !important;
+}
+
+.text-mocha {
+  color: var(--color-primary-mocha) !important;
+}
+
+.text-caramel {
+  color: var(--color-accent-caramel) !important;
+}
+
+.text-terracotta {
+  color: var(--color-accent-terracotta) !important;
+}
+
+/* Background utilities */
+.bg-subtle {
+  background-color: var(--color-bg-subtle) !important;
+}
+
+.bg-canvas {
+  background-color: var(--color-bg-canvas) !important;
+}
+
+.bg-surface {
+  background-color: var(--color-bg-surface) !important;
+}
+
+.bg-espresso {
+  background-color: var(--color-primary-espresso) !important;
+  color: #FFFFFF !important;
+}
+
+/* Semantic Badges with Guaranteed High Contrast */
+.badge-academic-success {
+  background-color: var(--color-status-success-bg) !important;
+  color: var(--color-status-success) !important;
+  border: 1px solid #C8E6C9 !important;
+}
+
+.badge-academic-warning {
+  background-color: var(--color-status-warning-bg) !important;
+  color: var(--color-status-warning) !important;
+  border: 1px solid #FFE082 !important;
+}
+
+.badge-academic-danger {
+  background-color: var(--color-status-danger-bg) !important;
+  color: var(--color-status-danger) !important;
+  border: 1px solid #FFCDD2 !important;
+}
+
+.badge-academic-info {
+  background-color: var(--color-status-info-bg) !important;
+  color: var(--color-status-info) !important;
+  border: 1px solid #B2DFDB !important;
+}
+
+/* Reset Bootstrap badge default white text for light backgrounds */
+.badge.bg-subtle,
+.badge.bg-light {
+  color: var(--color-primary-espresso) !important;
+}
+
+.badge.bg-subtle.text-muted,
+.badge.bg-light.text-muted {
+  color: var(--color-text-muted) !important;
+}
+
+/* Outlined Espresso Button */
+.btn-outline-espresso {
+  color: var(--color-primary-espresso) !important;
+  border: 1px solid var(--color-primary-espresso) !important;
+  background-color: transparent !important;
+  font-family: var(--font-family-heading);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.btn-outline-espresso:hover {
+  background-color: var(--color-primary-espresso) !important;
+  color: #FFFFFF !important;
+}

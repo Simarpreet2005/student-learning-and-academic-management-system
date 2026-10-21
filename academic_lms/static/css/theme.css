@@ -1,0 +1,104 @@
+/* ==========================================================================
+   Academic LMS — Brown-and-Cream Design System Theme Tokens
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* Core Brand Palette — Espresso & Saddle Brown */
+  --color-primary-espresso:     #2C1810;  /* Deep roasted coffee — Headings, prominent accents */
+  --color-primary-espresso-hover: #1E0F0A;
+  --color-primary-saddle:       #5D4037;  /* Warm saddle brown — Primary buttons, navigation */
+  --color-primary-saddle-hover: #4E342E;
+  --color-primary-mocha:        #6E473B;  /* Earthy mocha — Interactive borders & highlights */
+
+  /* Accent Bronze & Terracotta */
+  --color-accent-caramel:       #A06D3B;  /* Rich amber/bronze — Focus rings, active tabs */
+  --color-accent-caramel-hover: #8D5B29;
+  --color-accent-terracotta:    #B85D38;  /* Warm terracotta — Badges, warning highlights */
+  --color-accent-sand:          #D4B996;  /* Soft sand tone for borders & badges */
+
+  /* Neutral Surface Palette — Parchment & Cream */
+  --color-bg-canvas:            #FAF7F2;  /* Warm parchment cream page background */
+  --color-bg-surface:           #FFFFFF;  /* Crisp ivory card & modal surface */
+  --color-bg-subtle:            #F5EFEB;  /* Warm almond table stripes, input fills */
+  --color-bg-muted:             #EFEBE4;  /* Muted pill backgrounds, secondary tags */
+  --color-border-subtle:        #EAE0D5;  /* Soft cream divider lines & card borders */
+  --color-border-strong:        #DFD3C3;  /* Form control borders & active dividers */
+
+  /* Semantic State Palette — Muted Earth Tones */
+  --color-status-success:       #3E6B48;  /* Forest olive green — Pass, Present, Balanced */
+  --color-status-success-bg:    #EEF4EF;
+  --color-status-warning:       #C27D00;  /* Warm bronze amber — Late, Moderate Workload */
+  --color-status-warning-bg:    #FFF8E7;
+  --color-status-danger:        #9E2A2B;  /* Brick crimson — Absent, Fail, Crunch Workload */
+  --color-status-danger-bg:     #FDF0F0;
+  --color-status-info:          #3C6E71;  /* Slate peacock — Information notices */
+  --color-status-info-bg:       #EDF6F6;
+
+  /* Typography Colors */
+  --color-text-main:            #241812;  /* Deep walnut — High contrast on cream (WCAG AAA) */
+  --color-text-secondary:       #53433C;  /* Warm slate — Secondary text */
+  --color-text-muted:           #7D6D64;  /* Muted charcoal — Timestamps, captions */
+  --color-text-inverse:         #FFFFFF;  /* White text for dark brown buttons */
+
+  /* Typography Scales */
+  --font-family-heading:        'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-body:           'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-code:           'JetBrains Mono', Consolas, Monaco, monospace;
+
+  /* Elevation Shadows */
+  --shadow-sm:                  0 1px 3px rgba(44, 24, 16, 0.05);
+  --shadow-card:                0 2px 8px rgba(44, 24, 16, 0.06), 0 1px 2px rgba(44, 24, 16, 0.04);
+  --shadow-card-hover:          0 6px 16px rgba(44, 24, 16, 0.10);
+  --shadow-dropdown:            0 8px 24px rgba(44, 24, 16, 0.12);
+
+  /* Transitions */
+  --transition-fast:            0.15s ease-in-out;
+  --transition-normal:          0.25s ease-in-out;
+
+  /* Border Radii */
+  --radius-sm:                  6px;
+  --radius-md:                  10px;
+  --radius-lg:                  14px;
+  --radius-full:                9999px;
+}
+
+/* Base Document Styles */
+body {
+  background-color: var(--color-bg-canvas);
+  color: var(--color-text-main);
+  font-family: var(--font-family-body);
+  font-size: 0.965rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family: var(--font-family-heading);
+  color: var(--color-primary-espresso);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: var(--color-primary-saddle);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-accent-caramel);
+}
+
+code, kbd, samp, pre {
+  font-family: var(--font-family-code);
+  font-size: 0.875em;
+}
+
+hr {
+  border-color: var(--color-border-subtle);
+  opacity: 1;
+}

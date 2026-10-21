@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ title }} | {% trans 'Academic Management System' %}{% endblock title %}
+
+{% block content %}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+    </ol>
+</nav>
+
+<div class="manage-wrap">
+    <div class="d-flex align-items-center">
+        <div>
+            <h4 class="fw-bold mb-0">
+                <i class="fas fa-bell me-2 text-primary"></i>{{ title }}
+                {% if unread_count > 0 %}
+                <span class="badge bg-danger ms-2">{{ unread_count }} {% trans 'New' %}</span>
+                {% endif %}
+            </h4>
+            <p class="text-muted small mb-0">{% trans 'Stay informed on new assignments, grades, and academic updates' %}</p>
+        </div>
+        <div class="ms-auto d-flex gap-2">
+            {% if unread_count > 0 %}
+            <a href="{% url 'mark_all_notifications_read' %}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-check-double me-1"></i>{% trans 'Mark All as Read' %}
+            </a>
+            {% endif %}
+            <a href="/" class="btn btn-sm btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>{% trans 'Back to Home' %}
+            </a>
+        </div>
+    </div>
+</div>
+
+{% include 'snippets/messages.html' %}
+
+<div class="container-fluid p-0 mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            {% if notifications %}
+            <div class="list-group list-group-flush">
+                {% for n in notifications %}
+                <div class="list-group-item p-3 d-flex align-items-start {% if not n.is_read %}bg-light border-start border-4 border-primary{% endif %}">
+                    <div class="me-3 mt-1">
+                        {% if n.notification_type == 'assignment_created' %}
+                        <span class="avatar avatar-sm bg-primary text-white d-inline-flex justify-content-center align-items-center rounded-circle" style="width: 36px; height: 36px;">
+                            <i class="fas fa-book-open"></i>
+                        </span>
+                        {% elif n.notification_type == 'assignment_graded' %}
+                        <span class="avatar avatar-sm bg-success text-white d-inline-flex justify-content-center align-items-center rounded-circle" style="width: 36px; height: 36px;">
+                            <i class="fas fa-award"></i>
+                        </span>
+                        {% elif n.notification_type == 'assignment_deadline' %}
+                        <span class="avatar avatar-sm bg-warning text-dark d-inline-flex justify-content-center align-items-center rounded-circle" style="width: 36px; height: 36px;">
+                            <i class="fas fa-clock"></i>
+                        </span>
+                        {% else %}
+                        <span class="avatar avatar-sm bg-secondary text-white d-inline-flex justify-content-center align-items-center rounded-circle" style="width: 36px; height: 36px;">
+                            <i class="fas fa-info"></i>
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold mb-1 {% if not n.is_read %}text-dark{% else %}text-secondary{% endif %}">
+                                {{ n.title }}
+                                {% if not n.is_read %}
+                                <span class="badge bg-primary ms-1" style="font-size: 10px;">{% trans 'Unread' %}</span>
+                                {% endif %}
+                            </h6>
+                            <small class="text-muted"><i class="fas fa-clock me-1"></i>{{ n.created_at|timesince }} {% trans 'ago' %}</small>
+                        </div>
+                        <p class="mb-2 text-muted small" style="white-space: pre-line;">{{ n.message }}</p>
+
+                        <div class="d-flex gap-2 align-items-center">
+                            {% if n.link %}
+                            <a href="{% url 'mark_notification_read' n.pk %}" class="btn btn-sm btn-primary py-0 px-2" style="font-size: 12px;">
+                                <i class="fas fa-external-link-alt me-1"></i>{% trans 'View Assignment' %}
+                            </a>
+                            {% endif %}
+                            {% if not n.is_read and not n.link %}
+                            <a href="{% url 'mark_notification_read' n.pk %}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 12px;">
+                                <i class="fas fa-check me-1"></i>{% trans 'Mark as read' %}
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">{% trans 'No notifications yet' %}</h5>
+                <p class="text-secondary small mb-0">{% trans 'You will be notified when new assignments are posted or graded.' %}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

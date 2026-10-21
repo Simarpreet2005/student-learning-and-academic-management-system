@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Grading Desk: {{ attempt.student.get_full_name }} — {{ quiz.title }} | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-lg-4">
+
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'quizzes:quiz_list' %}">Quizzes</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'quizzes:quiz_detail' pk=quiz.pk %}">{{ quiz.title }}</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'quizzes:course_quiz_results' quiz_pk=quiz.pk %}">Course Results</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Grade Attempt #{{ attempt.attempt_number }}</li>
+    </ol>
+  </nav>
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge" style="background-color: var(--color-primary-espresso); color: #fff;">{{ quiz.course.code }}</span>
+        <span class="badge bg-secondary">Attempt #{{ attempt.attempt_number }}</span>
+        <span class="badge bg-warning text-dark">{{ attempt.get_status_display }}</span>
+      </div>
+      <h1 class="h3 fw-bold mb-1" style="color: var(--color-primary-espresso);">Lecturer Grading Desk</h1>
+      <p class="text-muted mb-0">Student: <strong>{{ attempt.student.get_full_name }}</strong> ({{ attempt.student.username }}) &bull; Quiz: {{ quiz.title }}</p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <a href="{% url 'quizzes:course_quiz_results' quiz_pk=quiz.pk %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fa-solid fa-arrow-left me-1"></i> Back to Roster
+      </a>
+      <a href="{% url 'quizzes:quiz_result' attempt_pk=attempt.pk %}" class="btn btn-outline-academic btn-sm">
+        <i class="fa-solid fa-eye me-1"></i> View Result Slip
+      </a>
+    </div>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="row g-4">
+      <!-- Main Content: Questions & Grading Inputs -->
+      <div class="col-lg-8">
+        <div class="d-flex flex-column gap-4">
+          {% for ans in answers %}
+            <div class="card card-academic shadow-sm border">
+              <div class="card-header bg-transparent border-bottom py-2 px-3 d-flex align-items-center justify-content-between" style="background-color: var(--color-surface-parchment);">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge" style="background-color: var(--color-primary-espresso); color: #fff;">
+                    Q{{ ans.question.order }}
+                  </span>
+                  <span class="badge bg-light text-dark border">
+                    {{ ans.question.get_question_type_display }}
+                  </span>
+                </div>
+                <span class="badge bg-secondary">
+                  Max {{ ans.question.marks }} pts
+                </span>
+              </div>
+
+              <div class="card-body card-body-academic p-4">
+                <!-- Question Prompt -->
+                <div class="fs-6 fw-semibold mb-3" style="color: var(--color-primary-espresso);">
+                  {{ ans.question.text|linebreaksbr }}
+                </div>
+
+                {% if ans.question.question_type == QuestionType.SHORT_ANSWER %}
+                  <!-- Student's Written Response -->
+                  <div class="p-3 rounded border mb-3 bg-white">
+                    <div class="small fw-bold text-muted mb-1 text-uppercase">Student Response:</div>
+                    <div class="small" style="line-height: 1.6;">
+                      {{ ans.text_response|default:"[No response entered by student]"|linebreaksbr }}
+                    </div>
+                  </div>
+
+                  <!-- Lecturer Model Answer / Rubric Reference -->
+                  {% if ans.question.model_answer %}
+                    <div class="p-3 rounded border mb-3" style="background-color: #FAF7F2;">
+                      <div class="small fw-bold text-muted mb-1 text-uppercase">
+                        <i class="fa-solid fa-scale-balanced me-1"></i> Model Answer / Grading Rubric Reference:
+                      </div>
+                      <div class="small text-muted">{{ ans.question.model_answer|linebreaksbr }}</div>
+                    </div>
+                  {% endif %}
+
+                  <!-- Grading Inputs -->
+                  <div class="p-3 rounded border" style="background-color: #F8F5EF;">
+                    <div class="row g-3">
+                      <div class="col-sm-5 col-md-4">
+                        <label class="form-label small fw-bold text-muted">Marks Awarded (Max {{ ans.question.marks }}):</label>
+                        <div class="input-group input-group-sm">
+                          <input type="number"
+                                 name="marks_{{ ans.id }}"
+                                 class="form-control"
+                                 step="0.25"
+                                 min="0"
+                                 max="{{ ans.question.marks }}"
+                                 value="{{ ans.marks_awarded }}"
+                                 required>
+                          <span class="input-group-text">/ {{ ans.question.marks }}</span>
+                        </div>
+                      </div>
+                      <div class="col-sm-7 col-md-8">
+                        <label class="form-label small fw-bold text-muted">Comment / Feedback on Response:</label>
+                        <input type="text"
+                               name="comment_{{ ans.id }}"
+                               class="form-control form-control-sm"
+                               placeholder="Feedback or rubric note..."
+                               value="{{ ans.lecturer_comment|default:'' }}">
+                      </div>
+                    </div>
+                  </div>
+
+                {% else %}
+                  <!-- Objective Questions (Auto-Graded Read-Only) -->
+                  <div class="p-3 rounded border" style="background-color: var(--color-surface-parchment);">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                      <span class="small fw-bold text-muted text-uppercase">Objective Auto-Evaluation</span>
+                      <span class="badge {% if ans.is_correct %}bg-success{% else %}bg-danger{% endif %}">
+                        {{ ans.marks_awarded }} / {{ ans.question.marks }} pts
+                      </span>
+                    </div>
+
+                    {% for opt in ans.question.options.all %}
+                      <div class="p-2 rounded mb-1 small d-flex justify-content-between align-items-center
+                        {% if ans.selected_option_id == opt.id and opt.is_correct %}
+                          bg-success-subtle text-success border border-success fw-bold
+                        {% elif ans.selected_option_id == opt.id and not opt.is_correct %}
+                          bg-danger-subtle text-danger border border-danger
+                        {% elif opt.is_correct %}
+                          bg-light text-muted border
+                        {% else %}
+                          bg-white
+                        {% endif %}">
+                        <span>{{ opt.text }}</span>
+                        {% if ans.selected_option_id == opt.id %}
+                          <span class="badge bg-secondary ms-2">Student Choice</span>
+                        {% endif %}
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Right Column: Sidebar & Submission Controls -->
+      <div class="col-lg-4">
+        <div class="card card-academic shadow-sm sticky-top" style="top: 85px;">
+          <div class="card-header bg-transparent border-bottom py-3">
+            <h6 class="mb-0 fw-bold" style="color: var(--color-primary-espresso);">
+              <i class="fa-solid fa-floppy-disk me-1" style="color: var(--color-primary-saddle);"></i>
+              Finalize Evaluation
+            </h6>
+          </div>
+          <div class="card-body card-body-academic p-3">
+            <div class="mb-3">
+              <span class="small text-muted d-block">Current Auto-Score:</span>
+              <div class="fw-bold fs-4" style="color: var(--color-primary-espresso);">
+                {{ attempt.score_obtained }} / {{ attempt.total_marks }} pts ({{ attempt.percentage }}%)
+              </div>
+            </div>
+
+            <!-- Overall Feedback -->
+            <div class="mb-3">
+              <label class="form-label small fw-bold text-muted">Overall Feedback for Student:</label>
+              <textarea name="overall_feedback"
+                        class="form-control form-control-sm"
+                        rows="4"
+                        placeholder="Constructive feedback, encouragement, or area for revision...">{{ attempt.feedback|default:'' }}</textarea>
+            </div>
+
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-espresso py-2">
+                <i class="fa-solid fa-check-double me-1"></i> Save &amp; Finalize Grading
+              </button>
+              <a href="{% url 'quizzes:course_quiz_results' quiz_pk=quiz.pk %}" class="btn btn-outline-secondary btn-sm">
+                Cancel
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

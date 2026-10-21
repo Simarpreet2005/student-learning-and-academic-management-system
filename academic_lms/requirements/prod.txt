@@ -1,0 +1,11 @@
+# ==============================================================================
+# Academic LMS — Production Dependencies
+# ==============================================================================
+
+-r base.txt
+
+# Production WSGI Server (MIT License)
+gunicorn>=21.2.0
+
+# PostgreSQL Database Adapter (LGPL with Runtime Exception / BSD Compatible)
+psycopg2-binary>=2.9.7

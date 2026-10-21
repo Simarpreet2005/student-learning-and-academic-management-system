@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Taking: {{ quiz.title }} | Academic LMS{% endblock %}
+
+{% block extra_head %}
+<style>
+  .sticky-timer-bar {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 70px;
+    z-index: 1020;
+    backdrop-filter: blur(8px);
+    background-color: rgba(44, 24, 16, 0.95);
+    color: #FAF7F2;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+  .timer-digit {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background-color: #FAF7F2;
+    color: #2C1810;
+  }
+  .timer-warning .timer-digit {
+    background-color: #ffc107;
+    color: #000;
+  }
+  .timer-danger .timer-digit {
+    background-color: #dc3545;
+    color: #fff;
+    animation: pulse 1s infinite;
+  }
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+  }
+  .option-card {
+    border: 1px solid #D8CFC4;
+    border-radius: 6px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    background-color: #FFFFFF;
+  }
+  .option-card:hover {
+    border-color: var(--color-primary-mocha);
+    background-color: #FAF7F2;
+  }
+  .form-check-input:checked ~ .option-label {
+    font-weight: 600;
+    color: var(--color-primary-espresso);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3 px-lg-4">
+
+  <!-- Sticky Timer & Header Bar -->
+  <div class="sticky-timer-bar p-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div>
+        <span class="badge" style="background-color: var(--color-primary-caramel); color: #fff;">
+          {{ quiz.course.code }}
+        </span>
+        <span class="ms-2 fw-bold text-white fs-6">{{ quiz.title }}</span>
+        <span class="d-none d-md-inline text-light opacity-75 ms-2">&bull; Attempt #{{ attempt.attempt_number }} of {{ quiz.max_attempts }}</span>
+      </div>
+
+      <!-- Live Countdown Timer -->
+      <div class="d-flex align-items-center gap-2" id="timerContainer">
+        <span class="small text-light opacity-75 d-none d-sm-inline">Time Remaining:</span>
+        <div class="timer-digit" id="timerDisplay">--:--</div>
+      </div>
+    </div>
+  </div>
+
+  <form method="post" id="quizDeskForm">
+    {% csrf_token %}
+    <input type="hidden" name="action" id="formActionInput" value="save">
+
+    <div class="row">
+      <!-- Questions Column -->
+      <div class="col-lg-9">
+        {% for card in question_cards %}
+          <div class="card card-academic shadow-sm mb-4 border" id="question_block_{{ card.question.id }}">
+            <div class="card-header bg-transparent border-bottom py-2 px-3 d-flex align-items-center justify-content-between" style="background-color: var(--color-surface-parchment);">
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge" style="background-color: var(--color-primary-espresso); color: #fff;">
+                  Question {{ card.number }}
+                </span>
+                <span class="badge bg-light text-dark border">
+                  {{ card.question.get_question_type_display }}
+                </span>
+              </div>
+              <span class="badge" style="background-color: #EFE8DE; color: var(--color-primary-espresso);">
+                {{ card.question.marks }} mark{{ card.question.marks|pluralize }}
+              </span>
+            </div>
+            <div class="card-body card-body-academic p-4">
+              <!-- Question Text -->
+              <div class="fs-6 fw-semibold mb-4" style="color: var(--color-primary-espresso); line-height: 1.6;">
+                {{ card.question.text|linebreaksbr }}
+              </div>
+
+              <!-- Answer Choices / Input -->
+              {% if card.question.question_type == QuestionType.SHORT_ANSWER %}
+                <div class="mb-2">
+                  <label class="form-label small fw-bold text-muted text-uppercase">Your Written Response:</label>
+                  <textarea name="question_{{ card.question.id }}"
+                            class="form-control"
+                            rows="4"
+                            placeholder="Type your answer clearly here...">{{ card.answer.text_response|default:'' }}</textarea>
+                </div>
+              {% else %}
+                <div class="d-flex flex-column gap-2">
+                  {% for opt in card.options %}
+                    <label class="option-card d-flex align-items-center gap-3">
+                      <input type="radio"
+                             class="form-check-input mt-0"
+                             name="question_{{ card.question.id }}"
+                             value="{{ opt.id }}"
+                             {% if card.answer.selected_option_id == opt.id %}checked{% endif %}>
+                      <span class="option-label">{{ opt.text }}</span>
+                    </label>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% empty %}
+          <div class="alert alert-warning">No questions found in this assessment.</div>
+        {% endfor %}
+      </div>
+
+      <!-- Navigation & Action Sidebar -->
+      <div class="col-lg-3">
+        <div class="card card-academic shadow-sm sticky-top" style="top: 145px;">
+          <div class="card-header bg-transparent border-bottom py-3">
+            <h6 class="mb-0 fw-bold" style="color: var(--color-primary-espresso);">
+              <i class="fa-solid fa-list-ol me-1" style="color: var(--color-primary-saddle);"></i>
+              Question Navigator
+            </h6>
+          </div>
+          <div class="card-body card-body-academic p-3">
+            <!-- Grid of question numbers -->
+            <div class="d-flex flex-wrap gap-2 mb-3">
+              {% for card in question_cards %}
+                <a href="#question_block_{{ card.question.id }}"
+                   class="btn btn-outline-secondary btn-sm"
+                   style="min-width: 38px;">
+                  {{ card.number }}
+                </a>
+              {% endfor %}
+            </div>
+            <hr class="my-2">
+            <div class="small text-muted mb-3">
+              <i class="fa-solid fa-info-circle me-1"></i> You can save progress at any time or submit once all responses are complete.
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-outline-academic" onclick="document.getElementById('formActionInput').value='save';">
+                <i class="fa-regular fa-floppy-disk me-1"></i> Save Draft
+              </button>
+              <button type="button" class="btn btn-espresso py-2" data-bs-toggle="modal" data-bs-target="#submitConfirmModal">
+                <i class="fa-solid fa-paper-plane me-1"></i> Submit Quiz
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+</div>
+
+<!-- Submission Confirmation Modal -->
+<div class="modal fade" id="submitConfirmModal" tabindex="-1" aria-labelledby="submitConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content card-academic">
+      <div class="modal-header border-bottom py-3">
+        <h5 class="modal-title fw-bold" id="submitConfirmModalLabel" style="color: var(--color-primary-espresso);">
+          <i class="fa-solid fa-circle-question me-2" style="color: var(--color-primary-saddle);"></i>
+          Confirm Final Submission
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4 text-center">
+        <p class="mb-2">Are you sure you are ready to finalize and submit your attempt?</p>
+        <p class="small text-muted mb-0">
+          Once submitted, your answers are permanently locked and cannot be amended. Immediate auto-grading will be executed for objective questions.
+        </p>
+      </div>
+      <div class="modal-footer border-top py-2">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Keep Working</button>
+        <button type="button" class="btn btn-espresso px-4" onclick="executeFinalSubmit();">
+          Yes, Submit Now
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Countdown Timer JavaScript -->
+<script>
+  let remainingSeconds = {{ remaining_seconds }};
+  const timerDisplay = document.getElementById("timerDisplay");
+  const timerContainer = document.getElementById("timerContainer");
+  const quizForm = document.getElementById("quizDeskForm");
+  const actionInput = document.getElementById("formActionInput");
+
+  function updateTimer() {
+    if (remainingSeconds <= 0) {
+      timerDisplay.textContent = "00:00";
+      timerContainer.classList.add("timer-danger");
+      // Trigger automatic submission on expiration
+      actionInput.value = "submit";
+      quizForm.submit();
+      return;
+    }
+
+    const hours = Math.floor(remainingSeconds / 3600);
+    const minutes = Math.floor((remainingSeconds % 3600) / 60);
+    const seconds = remainingSeconds % 60;
+
+    let timeString = "";
+    if (hours > 0) {
+      timeString = String(hours).padStart(2, "0") + ":" +
+                   String(minutes).padStart(2, "0") + ":" +
+                   String(seconds).padStart(2, "0");
+    } else {
+      timeString = String(minutes).padStart(2, "0") + ":" +
+                   String(seconds).padStart(2, "0");
+    }
+    timerDisplay.textContent = timeString;
+
+    // Visual indicators
+    if (remainingSeconds <= 120) {
+      timerContainer.classList.add("timer-danger");
+      timerContainer.classList.remove("timer-warning");
+    } else if (remainingSeconds <= 300) {
+      timerContainer.classList.add("timer-warning");
+    }
+
+    remainingSeconds--;
+  }
+
+  setInterval(updateTimer, 1000);
+  updateTimer();
+
+  function executeFinalSubmit() {
+    actionInput.value = "submit";
+    quizForm.submit();
+  }
+</script>
+{% endblock %}

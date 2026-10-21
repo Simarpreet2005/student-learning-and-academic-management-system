@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="breadcrumb" class="breadcrumb-academic">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">My Profile</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <!-- Left Column: User Summary Card -->
+    <div class="col-lg-4">
+      <div class="card card-academic text-center p-4">
+        <div class="brand-icon-box mx-auto mb-3" style="width: 72px; height: 72px; font-size: 2rem;">
+          {% if profile_user.is_student_role %}
+            <i class="fa-solid fa-user-graduate"></i>
+          {% elif profile_user.is_lecturer_role %}
+            <i class="fa-solid fa-chalkboard-user"></i>
+          {% elif profile_user.is_parent_role %}
+            <i class="fa-solid fa-users-viewfinder"></i>
+          {% else %}
+            <i class="fa-solid fa-user-shield"></i>
+          {% endif %}
+        </div>
+
+        <h4 class="fw-bold mb-1">{{ profile_user.get_full_name }}</h4>
+        <div class="text-muted small mb-3">@{{ profile_user.username }}</div>
+
+        <div class="mb-3">
+          <span class="badge badge-academic badge-role-{{ profile_user.role|lower }} fs-6 px-3 py-1">
+            {{ profile_user.get_role_display }}
+          </span>
+        </div>
+
+        <div class="d-grid gap-2">
+          <a href="{% url 'accounts:profile_edit' %}" class="btn btn-espresso btn-sm">
+            <i class="fa-solid fa-pen-to-square me-1"></i> Edit Profile
+          </a>
+          <a href="{% url 'accounts:password_change' %}" class="btn btn-outline-academic btn-sm">
+            <i class="fa-solid fa-key me-1"></i> Change Password
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Profile Details & Role Metadata -->
+    <div class="col-lg-8">
+      <!-- General Account Details -->
+      <div class="card card-academic mb-4">
+        <div class="card-header-academic">
+          <h5 class="mb-0"><i class="fa-solid fa-id-card me-2"></i> Account Information</h5>
+        </div>
+        <div class="card-body card-body-academic">
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <div class="small text-muted">Email Address</div>
+              <div class="fw-semibold">{{ profile_user.email }}</div>
+            </div>
+            <div class="col-sm-6">
+              <div class="small text-muted">Username</div>
+              <div class="fw-semibold">{{ profile_user.username }}</div>
+            </div>
+            <div class="col-sm-6">
+              <div class="small text-muted">First Name</div>
+              <div class="fw-semibold">{{ profile_user.first_name|default:"Not specified" }}</div>
+            </div>
+            <div class="col-sm-6">
+              <div class="small text-muted">Last Name</div>
+              <div class="fw-semibold">{{ profile_user.last_name|default:"Not specified" }}</div>
+            </div>
+            <div class="col-sm-6">
+              <div class="small text-muted">Date Joined</div>
+              <div class="fw-semibold">{{ profile_user.date_joined|date:"F d, Y" }}</div>
+            </div>
+            <div class="col-sm-6">
+              <div class="small text-muted">Account Status</div>
+              <div class="fw-semibold text-success"><i class="fa-solid fa-circle-check me-1"></i> Active</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Role-Specific Profile Section -->
+      {% if student_profile %}
+        <div class="card card-academic mb-4">
+          <div class="card-header-academic">
+            <h5 class="mb-0"><i class="fa-solid fa-graduation-cap me-2"></i> Student Academic Record</h5>
+          </div>
+          <div class="card-body card-body-academic">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <div class="small text-muted">Student ID</div>
+                <div class="fw-semibold text-primary font-monospace">{{ student_profile.student_id }}</div>
+              </div>
+              <div class="col-sm-6">
+                <div class="small text-muted">Academic Program</div>
+                <div class="fw-semibold">{{ student_profile.program|default:"Unassigned" }}</div>
+              </div>
+              <div class="col-sm-6">
+                <div class="small text-muted">Current Semester</div>
+                <div class="fw-semibold">{{ student_profile.current_semester|default:"Not registered" }}</div>
+              </div>
+              <div class="col-sm-6">
+                <div class="small text-muted">Phone Number</div>
+                <div class="fw-semibold">{{ student_profile.phone|default:"Not specified" }}</div>
+              </div>
+              <div class="col-sm-6">
+                <div class="small text-muted">Emergency Contact</div>
+                <div class="fw-semibold">{{ student_profile.emergency_contact|default:"None listed" }}</div>
+              </div>
+              <div class="col-sm-6">
+                <div class="small text-muted">Date of Birth</div>
+                <div class="fw-semibold">{{ student_profile.date_of_birth|default:"Not specified" }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% elif lecturer_profile %}
+        <div class="card card-academic mb-4">
+          <div class="card-header-academic">
+            <h5 class="mb-0"><i class="fa-solid fa-briefcase me-2"></i> Faculty Academic Record</h5>
+          </div>
+          <div class="card-body card-body-academic">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <div class="small text-muted">Employee / Staff ID</div>
+                <div class="fw-semibold font-monospace">{{ lecturer_profile.employee_id }}</div>
+              </div>
+              <div class="col-sm-6">
+                <div class="small text-muted">Department</div>
+                <div class="fw-semibold">{{ lecturer_profile.department|default:"Unassigned" }}</div>
+              </div>
+              <div class="col-sm-6">
+                <div class="small text-muted">Office Location</div>
+                <div class="fw-semibold">{{ lecturer_profile.office_location|default:"Not specified" }}</div>
+              </div>
+              <div class="col-sm-6">
+                <div class="small text-muted">Office Phone</div>
+                <div class="fw-semibold">{{ lecturer_profile.phone|default:"Not specified" }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% elif parent_profile %}
+        <div class="card card-academic mb-4">
+          <div class="card-header-academic">
+            <h5 class="mb-0"><i class="fa-solid fa-users me-2"></i> Parent & Guardian Details</h5>
+          </div>
+          <div class="card-body card-body-academic">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <div class="small text-muted">Contact Phone</div>
+                <div class="fw-semibold">{{ parent_profile.phone|default:"Not specified" }}</div>
+              </div>
+              <div class="col-sm-6">
+                <div class="small text-muted">Residential Address</div>
+                <div class="fw-semibold">{{ parent_profile.address|default:"Not specified" }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Linked Students Section for Parent -->
+        <div class="card card-academic">
+          <div class="card-header-academic">
+            <h5 class="mb-0"><i class="fa-solid fa-children me-2"></i> Explicitly Linked Students</h5>
+            <span class="badge badge-academic badge-role-parent">Read-Only Observer</span>
+          </div>
+          <div class="card-body card-body-academic p-0">
+            {% if linked_students %}
+              <div class="table-academic-wrapper border-0">
+                <table class="table table-academic">
+                  <thead>
+                    <tr>
+                      <th>Student Name</th>
+                      <th>Student ID</th>
+                      <th>Program</th>
+                      <th>Relationship</th>
+                      <th class="text-end">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for rel in linked_students %}
+                      <tr>
+                        <td class="fw-semibold">{{ rel.student.get_full_name }}</td>
+                        <td><code>{{ rel.student.student_profile.student_id|default:"N/A" }}</code></td>
+                        <td>{{ rel.student.student_profile.program|default:"Unassigned" }}</td>
+                        <td><span class="badge badge-academic badge-role-saddle">{{ rel.get_relationship_type_display }}</span></td>
+                        <td class="text-end">
+                          <a href="{% url 'accounts:student_detail' rel.student.id %}" class="btn btn-outline-academic btn-sm py-1 px-2">
+                            <i class="fa-solid fa-eye me-1"></i> View Student
+                          </a>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="p-4 text-center text-muted">
+                <i class="fa-solid fa-link-slash fs-3 mb-2 text-secondary"></i>
+                <p class="mb-0">No students are currently linked to your parent account.</p>
+                <small>Please contact your institution administrator to link student profiles.</small>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock content %}

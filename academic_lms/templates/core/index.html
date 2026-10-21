@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Academic LMS | Student Learning & Academic Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+
+  <!-- 1. Hero Section -->
+  <section class="py-5 px-3 px-md-5" style="background: linear-gradient(135deg, #FAF7F2 0%, #F5EFEB 100%); border-bottom: 1px solid var(--color-border-subtle);">
+    <div class="container py-lg-4">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-7">
+          <div class="d-inline-flex align-items-center gap-2 mb-3 px-3 py-1 rounded-pill" style="background-color: rgba(93, 64, 55, 0.08); border: 1px solid rgba(93, 64, 55, 0.15);">
+            <i class="fa-solid fa-graduation-cap" style="color: var(--color-primary-saddle);"></i>
+            <span class="small fw-semibold" style="color: var(--color-primary-espresso);">Unified Academic Lifecycle Management</span>
+          </div>
+          <h1 class="display-4 fw-bold mb-3" style="color: var(--color-primary-espresso); line-height: 1.15; letter-spacing: -0.02em;">
+            Your Learning Journey, Organized.
+          </h1>
+          <p class="lead text-secondary mb-4" style="max-width: 620px; font-size: 1.15rem; line-height: 1.6;">
+            A centralized scholastic platform uniting enrolled courses, digital learning materials, assignments, timed quizzes, academic transcripts, and deterministic workload planning for students, lecturers, parents, and administrators.
+          </p>
+          <div class="d-flex flex-wrap gap-3">
+            {% if user.is_authenticated %}
+              {% if user.is_admin_role or user.is_superuser %}
+                <a href="{% url 'accounts:admin_dashboard' %}" class="btn btn-espresso btn-lg px-4 py-2">
+                  <i class="fa-solid fa-gauge-high me-2"></i>Go to Admin Dashboard
+                </a>
+              {% elif user.is_lecturer_role %}
+                <a href="{% url 'accounts:lecturer_dashboard' %}" class="btn btn-espresso btn-lg px-4 py-2">
+                  <i class="fa-solid fa-gauge-high me-2"></i>Go to Lecturer Dashboard
+                </a>
+              {% elif user.is_student_role %}
+                <a href="{% url 'accounts:student_dashboard' %}" class="btn btn-espresso btn-lg px-4 py-2">
+                  <i class="fa-solid fa-gauge-high me-2"></i>Go to Student Dashboard
+                </a>
+              {% elif user.is_parent_role %}
+                <a href="{% url 'accounts:parent_dashboard' %}" class="btn btn-espresso btn-lg px-4 py-2">
+                  <i class="fa-solid fa-gauge-high me-2"></i>Go to Parent Portal
+                </a>
+              {% endif %}
+            {% else %}
+              <a href="{% url 'accounts:login' %}" class="btn btn-espresso btn-lg px-4 py-2">
+                <i class="fa-solid fa-right-to-bracket me-2"></i>Sign In to Portal
+              </a>
+            {% endif %}
+            <a href="#features" class="btn btn-outline-academic btn-lg px-4 py-2">
+              <i class="fa-solid fa-compass me-2"></i>Explore Features
+            </a>
+          </div>
+        </div>
+
+        <!-- Academic Dashboard Preview Illustration -->
+        <div class="col-lg-5">
+          <div class="card shadow-lg border-0 rounded-4 overflow-hidden" style="background: #FFFFFF; border: 1px solid var(--color-border-subtle) !important;">
+            <div class="p-3 d-flex align-items-center justify-content-between" style="background: var(--color-primary-espresso); color: #FAF7F2;">
+              <div class="d-flex align-items-center gap-2">
+                <div class="rounded-circle" style="width: 10px; height: 10px; background: #EF4444;"></div>
+                <div class="rounded-circle" style="width: 10px; height: 10px; background: #F59E0B;"></div>
+                <div class="rounded-circle" style="width: 10px; height: 10px; background: #10B981;"></div>
+                <span class="ms-2 small fw-semibold">Academic Workspace</span>
+              </div>
+              <span class="badge bg-light text-dark" style="font-size: 0.7rem;">Live Session</span>
+            </div>
+            <div class="p-4" style="background-color: var(--color-bg-base);">
+              <!-- Top Mini KPIs -->
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <div class="p-3 rounded-3" style="background: #FFFFFF; border: 1px solid var(--color-border-subtle);">
+                    <div class="d-flex align-items-center justify-content-between">
+                      <span class="small text-muted">Courses</span>
+                      <i class="fa-solid fa-book-open text-muted"></i>
+                    </div>
+                    <div class="h4 fw-bold mb-0 mt-1" style="color: var(--color-primary-espresso);">5 Active</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="p-3 rounded-3" style="background: #FFFFFF; border: 1px solid var(--color-border-subtle);">
+                    <div class="d-flex align-items-center justify-content-between">
+                      <span class="small text-muted">Deliverables</span>
+                      <i class="fa-solid fa-clock text-warning"></i>
+                    </div>
+                    <div class="h4 fw-bold mb-0 mt-1" style="color: #2C6E49;">2 Pending</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Planner Preview Block -->
+              <div class="p-3 rounded-3 mb-3" style="background: #FFFFFF; border: 1px solid var(--color-border-subtle);">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <span class="small fw-semibold" style="color: var(--color-primary-espresso);">
+                    <i class="fa-solid fa-compass-drafting me-1 text-primary"></i> Workload Status
+                  </span>
+                  <span class="badge bg-success" style="font-size: 0.7rem;">Balanced</span>
+                </div>
+                <div class="progress mb-2" style="height: 6px;">
+                  <div class="progress-bar" role="progressbar" style="width: 35%; background-color: var(--color-accent-caramel);" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="d-flex justify-content-between text-muted" style="font-size: 0.72rem;">
+                  <span>Study capacity: 16 hrs</span>
+                  <span>Effort: 5.5 hrs</span>
+                </div>
+              </div>
+
+              <!-- Deliverable List Preview -->
+              <div class="p-3 rounded-3" style="background: #FFFFFF; border: 1px solid var(--color-border-subtle);">
+                <div class="small fw-semibold mb-2" style="color: var(--color-primary-espresso);">
+                  <i class="fa-solid fa-list-check me-1"></i> Upcoming Deliverables
+                </div>
+                <div class="d-flex align-items-center justify-content-between py-1 border-bottom" style="font-size: 0.78rem;">
+                  <span><i class="fa-solid fa-file-lines me-1 text-primary"></i> CS101: Assignment 1</span>
+                  <span class="badge bg-light text-dark border">Due in 4 days</span>
+                </div>
+                <div class="d-flex align-items-center justify-content-between py-1 pt-2" style="font-size: 0.78rem;">
+                  <span><i class="fa-solid fa-circle-question me-1 text-success"></i> CS101: Quiz 1</span>
+                  <span class="badge bg-light text-dark border">20 mins</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Core Functional Pillars -->
+  <section id="features" class="py-5 px-3 px-md-5">
+    <div class="container py-lg-4">
+      <div class="text-center mb-5">
+        <span class="badge px-3 py-2 rounded-pill mb-2" style="background-color: rgba(93, 64, 55, 0.08); color: var(--color-primary-saddle);">
+          Platform Capabilities
+        </span>
+        <h2 class="display-6 fw-bold mb-2" style="color: var(--color-primary-espresso);">
+          Everything You Need to Succeed Academically
+        </h2>
+        <p class="text-muted mx-auto" style="max-width: 600px;">
+          Purpose-built scholastic tools engineered to support curriculum delivery, timely assignment submissions, fair evaluation, and balanced study planning.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <!-- Feature 1 -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card card-academic h-100 p-3 shadow-sm border-0">
+            <div class="card-body card-body-academic">
+              <div class="rounded-3 d-flex align-items-center justify-content-center mb-3" style="width: 48px; height: 48px; background: rgba(44, 24, 16, 0.08); color: var(--color-primary-espresso); font-size: 1.25rem;">
+                <i class="fa-solid fa-book-open"></i>
+              </div>
+              <h5 class="fw-bold mb-2" style="color: var(--color-primary-espresso);">Course &amp; Learning Materials</h5>
+              <p class="text-secondary small mb-0">
+                Browse syllabus modules, access lecturer lecture slides, spreadsheets, and reference reading materials with secure, permission-guarded downloads.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card card-academic h-100 p-3 shadow-sm border-0">
+            <div class="card-body card-body-academic">
+              <div class="rounded-3 d-flex align-items-center justify-content-center mb-3" style="width: 48px; height: 48px; background: rgba(93, 64, 55, 0.08); color: var(--color-primary-saddle); font-size: 1.25rem;">
+                <i class="fa-solid fa-file-pen"></i>
+              </div>
+              <h5 class="fw-bold mb-2" style="color: var(--color-primary-espresso);">Assignments &amp; Submissions</h5>
+              <p class="text-secondary small mb-0">
+                View instructions and effort estimates, submit coursework within active deadline windows, receive lecturer evaluations, and track grading progress.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card card-academic h-100 p-3 shadow-sm border-0">
+            <div class="card-body card-body-academic">
+              <div class="rounded-3 d-flex align-items-center justify-content-center mb-3" style="width: 48px; height: 48px; background: rgba(160, 109, 59, 0.1); color: var(--color-accent-caramel); font-size: 1.25rem;">
+                <i class="fa-solid fa-list-check"></i>
+              </div>
+              <h5 class="fw-bold mb-2" style="color: var(--color-primary-espresso);">Quizzes &amp; Academic Results</h5>
+              <p class="text-secondary small mb-0">
+                Take timed multiple-choice and short-answer quizzes with server-side time-limit enforcement, automated grading, manual scoring desks, and detailed score slips.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card card-academic h-100 p-3 shadow-sm border-0">
+            <div class="card-body card-body-academic">
+              <div class="rounded-3 d-flex align-items-center justify-content-center mb-3" style="width: 48px; height: 48px; background: rgba(44, 110, 73, 0.1); color: #2C6E49; font-size: 1.25rem;">
+                <i class="fa-solid fa-compass-drafting"></i>
+              </div>
+              <h5 class="fw-bold mb-2" style="color: var(--color-primary-espresso);">Smart Workload Planner</h5>
+              <p class="text-secondary small mb-0">
+                A deterministic, rule-based academic planner that prioritizes pending tasks, identifies deadline clashes, classifies workload levels, and generates personalized 7-day study pacing.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card card-academic h-100 p-3 shadow-sm border-0">
+            <div class="card-body card-body-academic">
+              <div class="rounded-3 d-flex align-items-center justify-content-center mb-3" style="width: 48px; height: 48px; background: rgba(184, 93, 56, 0.1); color: var(--color-accent-terracotta); font-size: 1.25rem;">
+                <i class="fa-solid fa-calendar-days"></i>
+              </div>
+              <h5 class="fw-bold mb-2" style="color: var(--color-primary-espresso);">Academic Calendar</h5>
+              <p class="text-secondary small mb-0">
+                Consolidated scholastic timeline featuring semester terms, institutional milestones, exam dates, assignment deadlines, and quiz availability windows in Month, Week, or List views.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card card-academic h-100 p-3 shadow-sm border-0">
+            <div class="card-body card-body-academic">
+              <div class="rounded-3 d-flex align-items-center justify-content-center mb-3" style="width: 48px; height: 48px; background: rgba(44, 24, 16, 0.08); color: var(--color-primary-espresso); font-size: 1.25rem;">
+                <i class="fa-solid fa-user-shield"></i>
+              </div>
+              <h5 class="fw-bold mb-2" style="color: var(--color-primary-espresso);">Role-Based Governance</h5>
+              <p class="text-secondary small mb-0">
+                Dedicated command centers for Administrators, Lecturers, Students, and Parents with strict server-side scoping and IDOR-safe access controls on every endpoint.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. How It Works -->
+  <section class="py-5 px-3 px-md-5" style="background: var(--color-bg-base); border-top: 1px solid var(--color-border-subtle); border-bottom: 1px solid var(--color-border-subtle);">
+    <div class="container py-lg-4">
+      <div class="text-center mb-5">
+        <span class="badge px-3 py-2 rounded-pill mb-2" style="background-color: rgba(93, 64, 55, 0.08); color: var(--color-primary-saddle);">
+          Simple Workflow
+        </span>
+        <h2 class="display-6 fw-bold mb-2" style="color: var(--color-primary-espresso);">
+          How the Academic LMS Operates
+        </h2>
+        <p class="text-muted mx-auto" style="max-width: 600px;">
+          Seamless coordination between academic administration, course delivery, student learning, and parent oversight.
+        </p>
+      </div>
+
+      <div class="row g-4 text-center">
+        <div class="col-md-4">
+          <div class="p-4 rounded-3 h-100" style="background: #FFFFFF; border: 1px solid var(--color-border-subtle);">
+            <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center mb-3 fw-bold fs-5 text-white" style="width: 48px; height: 48px; background-color: var(--color-primary-espresso);">
+              1
+            </div>
+            <h5 class="fw-bold mb-2" style="color: var(--color-primary-espresso);">Sign In to Your Workspace</h5>
+            <p class="text-secondary small mb-0">
+              Access your role-specific dashboard with tailored views for your academic responsibilities and enrolled courses.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="p-4 rounded-3 h-100" style="background: #FFFFFF; border: 1px solid var(--color-border-subtle);">
+            <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center mb-3 fw-bold fs-5 text-white" style="width: 48px; height: 48px; background-color: var(--color-primary-saddle);">
+              2
+            </div>
+            <h5 class="fw-bold mb-2" style="color: var(--color-primary-espresso);">Engage With Coursework</h5>
+            <p class="text-secondary small mb-0">
+              Download syllabus resources, work through assignments, attempt online quizzes, and check scheduled milestones.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="p-4 rounded-3 h-100" style="background: #FFFFFF; border: 1px solid var(--color-border-subtle);">
+            <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center mb-3 fw-bold fs-5 text-white" style="width: 48px; height: 48px; background-color: var(--color-accent-caramel);">
+              3
+            </div>
+            <h5 class="fw-bold mb-2" style="color: var(--color-primary-espresso);">Plan &amp; Monitor Progress</h5>
+            <p class="text-secondary small mb-0">
+              Optimize study hours with the deterministic Workload Planner and track academic results with official performance slips.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Role Overview Section -->
+  <section id="roles" class="py-5 px-3 px-md-5">
+    <div class="container py-lg-4">
+      <div class="text-center mb-5">
+        <span class="badge px-3 py-2 rounded-pill mb-2" style="background-color: rgba(93, 64, 55, 0.08); color: var(--color-primary-saddle);">
+          Tailored Experiences
+        </span>
+        <h2 class="display-6 fw-bold mb-2" style="color: var(--color-primary-espresso);">
+          Four Dedicated Stakeholder Portals
+        </h2>
+        <p class="text-muted mx-auto" style="max-width: 600px;">
+          Every user role is provided with a focused, intuitive command center tailored strictly to their institutional responsibilities.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        {% for role in roles %}
+          <div class="col-md-6 col-lg-3">
+            <div class="card card-academic h-100 shadow-sm border-0">
+              <div class="card-body card-body-academic d-flex flex-column justify-content-between p-4">
+                <div>
+                  <div class="d-flex align-items-center justify-content-between mb-3">
+                    <span class="badge badge-academic badge-role-{{ role.tag|lower }}">
+                      {{ role.tag }}
+                    </span>
+                    <i class="fa-solid {{ role.icon }} fs-4" style="color: {{ role.color }};"></i>
+                  </div>
+                  <h5 class="fw-bold mb-2" style="color: var(--color-primary-espresso);">{{ role.name }}</h5>
+                  <p class="text-secondary small mb-3">
+                    {{ role.description }}
+                  </p>
+                </div>
+                <div class="pt-3 border-top border-light">
+                  <span class="small fw-semibold" style="color: {{ role.color }};">
+                    <i class="fa-solid fa-circle-check me-1"></i> Dedicated Dashboard
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Call to Action -->
+  <section class="py-5 px-3 px-md-5 text-center" style="background: linear-gradient(135deg, var(--color-primary-espresso) 0%, var(--color-primary-saddle) 100%); color: #FAF7F2;">
+    <div class="container py-lg-3">
+      <h2 class="display-6 fw-bold mb-3">Ready to Begin?</h2>
+      <p class="lead mb-4 mx-auto" style="max-width: 580px; opacity: 0.9; font-size: 1.1rem;">
+        Log in to access your enrolled courses, learning resources, academic calendar, and workload plans.
+      </p>
+      <div class="d-flex justify-content-center gap-3">
+        {% if user.is_authenticated %}
+          <a href="{% url 'accounts:profile' %}" class="btn btn-light btn-lg px-4 py-2" style="color: var(--color-primary-espresso); font-weight: 600;">
+            <i class="fa-solid fa-user me-2"></i>View My Profile
+          </a>
+        {% else %}
+          <a href="{% url 'accounts:login' %}" class="btn btn-light btn-lg px-4 py-2" style="color: var(--color-primary-espresso); font-weight: 600;">
+            <i class="fa-solid fa-right-to-bracket me-2"></i>Sign In Now
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+</div>
+{% endblock content %}

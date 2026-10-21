@@ -1,12 +1,22 @@
+﻿import secrets
+import string
 import threading
 from datetime import datetime
-from django.contrib.auth import get_user_model
+
 from django.conf import settings
+from django.contrib.auth import get_user_model
+
 from core.utils import send_html_email
 
 
-def generate_password():
-    return get_user_model().objects.make_random_password()
+def generate_password(length: int = 10) -> str:
+    """Return a cryptographically random password.
+
+    Uses `secrets` so it works across all supported Django/Python versions.
+    `BaseUserManager.make_random_password()` was removed in Django 5.0.
+    """
+    alphabet = string.ascii_letters + string.digits
+    return "".join(secrets.choice(alphabet) for _ in range(length))
 
 
 def generate_student_id():

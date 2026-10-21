@@ -1,0 +1,26 @@
+# ==============================================================================
+# Academic LMS — Base Dependencies (Production & Development)
+# All dependencies are governed by permissive open-source licenses.
+# ==============================================================================
+
+# Core Web Framework (3-Clause BSD License)
+Django>=5.2.0,<5.3.0
+
+# 12-Factor Configuration & Environment Variables (3-Clause BSD License)
+python-decouple>=3.8
+
+# Forms Rendering & Bootstrap 5 Integration (MIT License)
+django-crispy-forms>=1.14.0
+crispy-bootstrap5>=0.7
+
+# Static Files Serving for Production / Staging (MIT License)
+whitenoise>=6.2.0
+
+# Server-Side PDF Document Engine for Transcripts & Slips (3-Clause BSD License)
+reportlab>=4.0.0
+
+# Image Processing for User Profile Avatars & Documents (HPND License / Permissive)
+Pillow>=13.0.0
+
+# Modern HTTP Client for Authorized Integrations (Apache 2.0 License)
+requests>=2.31.0

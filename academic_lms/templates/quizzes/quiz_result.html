@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Quiz Result — {{ quiz.title }} | Academic LMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-lg-4">
+
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'quizzes:quiz_list' %}">Quizzes</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'quizzes:quiz_detail' pk=quiz.pk %}">{{ quiz.title }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Result #{{ attempt.attempt_number }}</li>
+    </ol>
+  </nav>
+
+  <!-- Parent Observer Banner -->
+  {% if is_parent_view %}
+    <div class="alert alert-info d-flex align-items-center mb-4">
+      <i class="fa-solid fa-user-shield fa-2x me-3"></i>
+      <div>
+        <h6 class="fw-bold mb-0">Parent Portal Observation</h6>
+        <p class="small mb-0">Viewing official assessment results for linked student: <strong>{{ attempt.student.get_full_name }}</strong> ({{ attempt.student.username }}).</p>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Result Summary Card -->
+  <div class="card card-academic shadow-sm mb-4">
+    <div class="card-body card-body-academic p-4">
+      <div class="row align-items-center g-4">
+        <!-- Score Circle / Badge -->
+        <div class="col-md-4 text-center border-end">
+          <div class="p-4 rounded-circle d-inline-flex flex-column align-items-center justify-content-center shadow-sm"
+               style="width: 160px; height: 160px; background-color: var(--color-surface-parchment); border: 4px solid {% if attempt.is_passed %}#198754{% elif attempt.status == 'SUBMITTED' %}#ffc107{% else %}#dc3545{% endif %};">
+            <span class="fs-1 fw-bold" style="color: var(--color-primary-espresso); line-height: 1;">
+              {{ attempt.score_obtained }}
+            </span>
+            <span class="small text-muted">out of {{ attempt.total_marks }} pts</span>
+            <span class="fw-bold mt-1 fs-5 {% if attempt.is_passed %}text-success{% elif attempt.status == 'SUBMITTED' %}text-warning text-dark{% else %}text-danger{% endif %}">
+              {{ attempt.percentage }}%
+            </span>
+          </div>
+
+          <div class="mt-3">
+            {% if attempt.status == AttemptStatus.COMPLETED %}
+              {% if attempt.is_passed %}
+                <span class="badge bg-success fs-6 py-2 px-3"><i class="fa-solid fa-circle-check me-1"></i> Passed</span>
+              {% else %}
+                <span class="badge bg-danger fs-6 py-2 px-3"><i class="fa-solid fa-circle-xmark me-1"></i> Not Passed</span>
+              {% endif %}
+            {% elif attempt.status == AttemptStatus.SUBMITTED %}
+              <span class="badge bg-warning text-dark fs-6 py-2 px-3">
+                <i class="fa-solid fa-hourglass-half me-1"></i> Grading in Progress (Short Answer pending review)
+              </span>
+            {% elif attempt.status == AttemptStatus.EXPIRED %}
+              <span class="badge bg-secondary fs-6 py-2 px-3">
+                <i class="fa-solid fa-clock-rotate-left me-1"></i> Expired / Auto-Submitted
+              </span>
+            {% else %}
+              <span class="badge bg-info text-dark fs-6 py-2 px-3">{{ attempt.get_status_display }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Metadata & Assessment Information -->
+        <div class="col-md-8">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge" style="background-color: var(--color-primary-espresso); color: #fff;">{{ quiz.course.code }}</span>
+            <span class="fw-bold text-muted small">Attempt #{{ attempt.attempt_number }} of {{ quiz.max_attempts }}</span>
+          </div>
+          <h2 class="h4 fw-bold mb-1" style="color: var(--color-primary-espresso);">{{ quiz.title }}</h2>
+          <p class="text-muted mb-3">{{ quiz.course.title }}</p>
+
+          <div class="row g-2 small text-muted mb-3">
+            <div class="col-sm-6">
+              <i class="fa-solid fa-user me-1"></i> Student: <strong>{{ attempt.student.get_full_name }}</strong>
+            </div>
+            <div class="col-sm-6">
+              <i class="fa-regular fa-clock me-1"></i> Started: {{ attempt.started_at|date:"M d, Y H:i" }}
+            </div>
+            <div class="col-sm-6">
+              <i class="fa-solid fa-flag-checkered me-1"></i> Submitted: {{ attempt.submitted_at|date:"M d, Y H:i"|default:"—" }}
+            </div>
+            <div class="col-sm-6">
+              <i class="fa-solid fa-percent me-1"></i> Pass Mark Requirement: <strong>{{ quiz.pass_percentage }}%</strong>
+            </div>
+          </div>
+
+          <!-- Overall Feedback -->
+          {% if attempt.feedback %}
+            <div class="p-3 rounded border" style="background-color: var(--color-surface-parchment);">
+              <h6 class="fw-bold mb-1" style="color: var(--color-primary-espresso);">
+                <i class="fa-solid fa-comment-dots me-1" style="color: var(--color-primary-saddle);"></i> Lecturer Feedback:
+              </h6>
+              <p class="mb-0 small" style="line-height: 1.5;">{{ attempt.feedback|linebreaksbr }}</p>
+            </div>
+          {% endif %}
+
+          {% if can_grade %}
+            <div class="mt-3">
+              <a href="{% url 'quizzes:attempt_review' attempt_pk=attempt.pk %}" class="btn btn-espresso btn-sm">
+                <i class="fa-solid fa-marker me-1"></i> Open Lecturer Grading Desk
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Question by Question Breakdown -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h4 class="h5 fw-bold mb-0" style="color: var(--color-primary-espresso);">
+      <i class="fa-solid fa-clipboard-check me-2" style="color: var(--color-primary-saddle);"></i>
+      Detailed Question Breakdown
+    </h4>
+    <div>
+      {% if show_keys %}
+        <span class="badge bg-success-subtle text-success border border-success">
+          <i class="fa-solid fa-unlock me-1"></i> Answer Key Released
+        </span>
+      {% else %}
+        <span class="badge bg-secondary-subtle text-secondary border">
+          <i class="fa-solid fa-lock me-1"></i> Answer Key Restricted by Course Policy
+        </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="d-flex flex-column gap-3 mb-4">
+    {% for ans in answers %}
+      <div class="card card-academic shadow-sm border">
+        <div class="card-header bg-transparent border-bottom py-2 px-3 d-flex align-items-center justify-content-between" style="background-color: var(--color-surface-parchment);">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge" style="background-color: var(--color-primary-espresso); color: #fff;">
+              Q{{ ans.question.order }}
+            </span>
+            <span class="badge bg-light text-dark border">
+              {{ ans.question.get_question_type_display }}
+            </span>
+          </div>
+
+          <div>
+            {% if ans.question.question_type == QuestionType.SHORT_ANSWER and ans.graded_at is None %}
+              <span class="badge bg-warning text-dark">
+                <i class="fa-solid fa-hourglass-start me-1"></i> Awaiting Manual Evaluation ({{ ans.question.marks }} pts)
+              </span>
+            {% else %}
+              <span class="badge {% if ans.is_correct %}bg-success{% elif ans.marks_awarded > 0 %}bg-warning text-dark{% else %}bg-danger{% endif %} py-1 px-2">
+                {{ ans.marks_awarded }} / {{ ans.question.marks }} pts
+              </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="card-body card-body-academic p-4">
+          <!-- Question text -->
+          <div class="fs-6 fw-semibold mb-3" style="color: var(--color-primary-espresso);">
+            {{ ans.question.text|linebreaksbr }}
+          </div>
+
+          <!-- Answer Analysis -->
+          {% if ans.question.question_type == QuestionType.SHORT_ANSWER %}
+            <div class="p-3 rounded border mb-3 bg-white">
+              <div class="small fw-bold text-muted mb-1 text-uppercase">Student Written Response:</div>
+              <div class="small" style="line-height: 1.6;">
+                {{ ans.text_response|default:"[No response provided]"|linebreaksbr }}
+              </div>
+            </div>
+
+            <!-- Lecturer Commentary on Short Answer -->
+            {% if ans.lecturer_comment %}
+              <div class="p-3 rounded border mb-2" style="background-color: #F8F4EE;">
+                <div class="small fw-bold text-muted mb-1 text-uppercase">
+                  <i class="fa-solid fa-comment-pen me-1"></i> Lecturer Evaluation &amp; Commentary:
+                </div>
+                <div class="small">{{ ans.lecturer_comment|linebreaksbr }}</div>
+              </div>
+            {% endif %}
+
+            {% if show_keys and ans.question.model_answer %}
+              <div class="p-3 rounded border" style="background-color: #EFF7EF;">
+                <div class="small fw-bold text-success mb-1 text-uppercase">
+                  <i class="fa-solid fa-award me-1"></i> Model Answer / Expected Rubric Criteria:
+                </div>
+                <div class="small text-muted">{{ ans.question.model_answer|linebreaksbr }}</div>
+              </div>
+            {% endif %}
+
+          {% else %}
+            <!-- Multiple Choice & True/False Analysis -->
+            <div class="d-flex flex-column gap-2 mb-2">
+              {% for opt in ans.question.options.all %}
+                <div class="p-2 px-3 rounded border d-flex align-items-center justify-content-between
+                  {% if ans.selected_option_id == opt.id and opt.is_correct %}
+                    bg-success text-white border-success
+                  {% elif ans.selected_option_id == opt.id and not opt.is_correct %}
+                    bg-danger-subtle border-danger text-danger
+                  {% elif show_keys and opt.is_correct %}
+                    bg-success-subtle border-success text-success fw-bold
+                  {% else %}
+                    bg-white
+                  {% endif %}">
+                  <div>
+                    <i class="fa-solid {% if ans.selected_option_id == opt.id %}fa-circle-dot{% else %}fa-circle{% endif %} me-2"></i>
+                    <span>{{ opt.text }}</span>
+                    {% if ans.selected_option_id == opt.id %}
+                      <span class="badge bg-light text-dark ms-2 border">Your Selection</span>
+                    {% endif %}
+                  </div>
+                  <div>
+                    {% if show_keys and opt.is_correct %}
+                      <span class="badge bg-success"><i class="fa-solid fa-check me-1"></i> Correct Key</span>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+
+            {% if show_keys and ans.question.model_answer %}
+              <div class="p-2 px-3 rounded border small mt-2" style="background-color: var(--color-surface-parchment);">
+                <strong>Explanation:</strong> {{ ans.question.model_answer }}
+              </div>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Bottom Action Buttons -->
+  <div class="d-flex justify-content-between align-items-center">
+    <a href="{% url 'quizzes:quiz_detail' pk=quiz.pk %}" class="btn btn-outline-academic">
+      <i class="fa-solid fa-arrow-left me-1"></i> Back to Quiz Information
+    </a>
+    <a href="{% url 'quizzes:quiz_list' %}" class="btn btn-espresso">
+      <i class="fa-solid fa-list me-1"></i> All Quizzes
+    </a>
+  </div>
+
+</div>
+{% endblock %}

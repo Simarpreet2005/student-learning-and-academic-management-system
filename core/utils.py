@@ -56,3 +56,64 @@ def unique_slug_generator(instance, new_slug=None):
         new_slug = f"{slug}-{random_string_generator(size=4)}"
         return unique_slug_generator(instance, new_slug=new_slug)
     return slug
+
+
+def notify_assignment_created(assignment):
+    """Notify all students enrolled in the course about a newly created assignment."""
+    from result.models import TakenCourse  # pylint: disable=import-outside-toplevel
+    from core.models import Notification  # pylint: disable=import-outside-toplevel
+
+    enrolled_records = TakenCourse.objects.filter(
+        course=assignment.course
+    ).select_related("student__student")
+
+    due_str = assignment.due_date.strftime("%b %d, %Y %I:%M %p")
+    title = f"New Assignment: {assignment.title} ({assignment.course.code})"
+    message = (
+        f"A new assignment '{assignment.title}' has been published for {assignment.course}. "
+        f"Deadline: {due_str}. Maximum marks: {assignment.maximum_marks}."
+    )
+    link = assignment.get_absolute_url()
+
+    notifications = []
+    for record in enrolled_records:
+        student_user = getattr(record.student, "student", None)
+        if student_user:
+            notifications.append(
+                Notification(
+                    user=student_user,
+                    title=title,
+                    message=message,
+                    notification_type="assignment_created",
+                    link=link,
+                )
+            )
+
+    if notifications:
+        Notification.objects.bulk_create(notifications)
+
+
+def notify_assignment_graded(submission):
+    """Notify the student when their assignment submission is graded."""
+    from core.models import Notification  # pylint: disable=import-outside-toplevel
+
+    assignment = submission.assignment
+    student_user = getattr(submission.student, "student", None)
+    if not student_user:
+        return
+
+    title = f"Assignment Graded: {assignment.title} ({assignment.course.code})"
+    score_str = f"{submission.marks} / {assignment.maximum_marks}"
+    message = (
+        f"Your submission for '{assignment.title}' has been graded. "
+        f"Score: {score_str}."
+    )
+    link = assignment.get_absolute_url()
+
+    Notification.objects.create(
+        user=student_user,
+        title=title,
+        message=message,
+        notification_type="assignment_graded",
+        link=link,
+    )
