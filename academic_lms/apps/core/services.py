@@ -14,13 +14,13 @@ Strictly role-scoped:
 """
 import calendar
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone as dt_timezone
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.accounts.models import ParentStudentRelationship, Role, User
+from apps.accounts.models import ParentStudentRelationship, User
 from apps.academics.models import Course, EnrollmentStatus, Semester, StudentEnrollment, CourseAllocation
 from apps.assessments.models import Assignment, AssignmentSubmission
 from apps.core.models import AcademicEvent, EventType

@@ -15,6 +15,7 @@ SECRET_KEY = config(
 )
 
 DEBUG = config("DEBUG", default=True, cast=bool)
+ENVIRONMENT = config("ENVIRONMENT", default="development")
 
 ALLOWED_HOSTS = config(
     "ALLOWED_HOSTS",

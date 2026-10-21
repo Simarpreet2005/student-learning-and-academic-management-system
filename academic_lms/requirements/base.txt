@@ -15,12 +15,3 @@ crispy-bootstrap5>=0.7
 
 # Static Files Serving for Production / Staging (MIT License)
 whitenoise>=6.2.0
-
-# Server-Side PDF Document Engine for Transcripts & Slips (3-Clause BSD License)
-reportlab>=4.0.0
-
-# Image Processing for User Profile Avatars & Documents (HPND License / Permissive)
-Pillow>=13.0.0
-
-# Modern HTTP Client for Authorized Integrations (Apache 2.0 License)
-requests>=2.31.0

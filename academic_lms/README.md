@@ -1,190 +1,168 @@
-﻿# Academic LMS â€” Role-Based Student Learning and Academic Management System
+# Academic LMS
 
-A robust, enterprise-grade Django web application engineered for higher education institutions. Academic LMS provides a unified, secure academic lifecycle management platform tailored for four distinct user roles: **Administrator**, **Lecturer**, **Student**, and **Parent**.
+Academic LMS is a role based learning and academic management application for administrators, lecturers, students, and parents or guardians. It brings course records, learning resources, quizzes, an academic calendar, and a deterministic workload planner into one Django project.
 
-Designed with an original **brown-and-cream scholastic aesthetic**, strict server-side authorization, accessible contrast ratios, and zero external AI or live-class dependencies.
+This README describes the code currently in this repository. Some registered Django apps and documents are scaffolding or plans; they are identified as such below rather than described as finished features.
 
----
+## Problem and objectives
 
-## ðŸŒŸ Current Project Status
+The project provides a shared place to manage academic course structures and learning activities while limiting access to a user's role, course allocations, enrollments, and explicit parent-student links. The planner summarizes upcoming assignment and quiz work using visible rules; it does not use an AI service.
 
-### Phase 8 Complete âœ… â€” All Planned Phases Delivered
+## Implemented features
 
-The Academic LMS has successfully completed **all eight planned implementation phases**, delivering a fully integrated academic management platform with role-specific dashboards, an interactive academic calendar, and a comprehensive automated test suite.
+- Email-based sign-in, role-specific dashboards, profile editing, and password change/reset views.
+- Admin-managed users, role profiles, parent-student relationships, departments, programs, academic years, semesters, courses, allocations, and enrollments.
+- Academic events and a calendar with month, week, and list views, plus role-scoped course events.
+- Course modules and learning resources, including file and external-link validation, access checks, and downloads.
+- Quizzes with question authoring, timed attempts, automatic objective-question grading, short-answer review, and result views.
+- A deterministic workload planner that prioritizes assignment and quiz deadlines, identifies close deadline clusters, and produces a seven-day plan when a student sets study availability.
+- Django Admin registrations for accounts, academics, courseware, quizzes, and related records. The Admin uses an isolated brown-and-cream stylesheet.
+- Automated Django tests and GitHub Actions workflows for system checks, migration consistency, tests, and Pylint.
 
-| Phase | Description | Status |
-|:---:|:---|:---:|
-| 1 | Project Scaffolding, Configuration & Brown-and-Cream Design System | âœ… Done |
-| 2 | Core Academic Hierarchy & Calendar (`apps.core`) | âœ… Done |
-| 3 | Custom Authentication, User Profiles & Parent Linkage (`apps.accounts`) | âœ… Done |
-| 4 | Departments, Programs, Courses, Allocations & Enrollments (`apps.academics`) | âœ… Done |
-| 5 | Digital Courseware & Learning Resources (`apps.courseware`) | âœ… Done |
-| 6 | Quizzes, Grading & Results (`apps.quizzes`) | âœ… Done |
-| 7 | Rule-Based Smart Academic Workload Planner (`apps.planner`) | âœ… Done |
-| 8 | Final Dashboards, Academic Calendar, Integration & QA (`apps.core` + `apps.accounts`) | âœ… Done |
+Assignment and submission data models are present and used by dashboard/planner queries. The current URL configuration does not expose a complete student assignment-submission workflow. The registered `attendance`, `discussions`, `gradebook`, `notifications`, and `reporting` apps are placeholders; attendance tracking, forums, GPA/transcripts, notification delivery, and report exports are not implemented.
 
-> [!NOTE]
-> Attendance management (`apps.attendance`) and discussion forums (`apps.discussions`) are intentionally excluded from the implemented scope per project requirements.
+## Roles and access
 
-**Active test suite**: **157 automated tests** â€” 0 failures, 0 errors.
+| Role | Current access |
+| --- | --- |
+| Administrator | Staff/superuser access to Django Admin and institutional dashboard. Admin registrations cover users, role profiles, relationship links, academic structure, courseware, quizzes, questions, attempts, and answers. |
+| Lecturer | Courseware and quiz authoring/grading for courses allocated to the lecturer; lecturer dashboard and course workload summaries. |
+| Student | Own profile and dashboard, resources for enrolled courses, published quizzes and own results, and own workload preferences/plan. Enrollment records are managed through the Admin; there is no self-service enrollment route. |
+| Parent | Read-only information for students explicitly linked to the parent account, including permitted course resources, published quiz results, deadlines, and workload summaries. |
 
----
+These are application-level checks in views and permission helpers as well as Django Admin's staff/permission checks. A parent link is required for student-specific observer access.
 
-## ðŸ›ï¸ Architecture & Domain Applications Structure
+## Technology and supported versions
+
+- Python: GitHub Actions runs Python 3.11, 3.12, and 3.13. This checkout was also exercised locally with Python 3.14.7; that version is not in the CI matrix.
+- Django: `>=5.2,<5.3`.
+- Database: SQLite in `config.settings.development`; PostgreSQL configuration in `config.settings.production`.
+- UI: Django templates, Bootstrap 5.3, Font Awesome 6.5, vanilla JavaScript, and project CSS. Admin-only styles are in `static/css/admin.css`.
+- Other runtime dependencies are declared in `requirements/base.txt`; CI uses the hash-locked `requirements/ci.txt` generated from `requirements/ci.in`.
+- Production-only packages, including Gunicorn and the PostgreSQL adapter, are in `requirements/prod.txt`.
+
+The base requirements are version ranges rather than a complete lockfile. CI dependencies are pinned and hash-checked.
+
+## Architecture and project layout
 
 ```text
 academic_lms/
-â”œâ”€â”€ config/                         # Core Django configuration
-â”‚   â”œâ”€â”€ settings/
-â”‚   â”‚   â”œâ”€â”€ base.py                 # Common settings, security, crispy forms
-â”‚   â”‚   â”œâ”€â”€ development.py          # SQLite engine, debug & console email
-â”‚   â”‚   â””â”€â”€ production.py           # PostgreSQL, WhiteNoise static, SSL headers
-â”‚   â”œâ”€â”€ urls.py                     # Root URL routing (includes quizzes/)
-â”‚   â””â”€â”€ wsgi.py
-â”œâ”€â”€ apps/                           # Domain-driven modular applications
-â”‚   â”œâ”€â”€ core/                       # AcademicYear, Semester, Events, Base models, Landing view
-â”‚   â”œâ”€â”€ accounts/                   # Custom User, Profiles (Student, Lecturer, Parent), Guardianship
-â”‚   â”œâ”€â”€ academics/                  # Departments, Programs, Courses, Allocations, Enrollments
-â”‚   â”œâ”€â”€ courseware/                 # Modules, Notes, File Attachments
-â”‚   â”œâ”€â”€ quizzes/                    # Quiz, Question, QuizAttempt, StudentAnswer; grading service
-â”‚   â”œâ”€â”€ assessments/                # Assignment, AssignmentSubmission, Quizzes facade
-â”‚   â”œâ”€â”€ gradebook/                  # Grading scales, GPA/CGPA engine, Transcripts
-â”‚   â”œâ”€â”€ attendance/                 # Sessions, Attendance records, Low-attendance alerts (<75%)
-â”‚   â”œâ”€â”€ planner/                    # âœ… Rule-based Smart Academic Workload Planner (Deterministic)
-â”‚   â”œâ”€â”€ discussions/                # Course forums, threads, instructor endorsements
-â”‚   â”œâ”€â”€ notifications/              # In-app notification dispatcher & alerts
-â”‚   â””â”€â”€ reporting/                  # Official PDF document & CSV export services
-â”œâ”€â”€ static/                         # Design system CSS and client-side JavaScript
-â”‚   â”œâ”€â”€ css/
-â”‚   â”‚   â”œâ”€â”€ theme.css               # Brown-and-cream design tokens
-â”‚   â”‚   â””â”€â”€ components.css          # Cards, tables, forms, badges, workload heatmap
-â”‚   â””â”€â”€ js/
-â”‚       â””â”€â”€ main.js                 # Vanilla client-side interactions
-â”œâ”€â”€ templates/                      # Modular template hierarchy
-â”‚   â”œâ”€â”€ base.html                   # Master layout with navbar, sidebar, theme styles
-â”‚   â”œâ”€â”€ components/                 # Navbar, footer, flash messages
-â”‚   â”œâ”€â”€ quizzes/                    # Quiz list/detail, take, result, grading desk templates
-â”‚   â”œâ”€â”€ planner/                    # âœ… Workload dashboard, preferences, course workload, parent observer
-â”‚   â””â”€â”€ core/                       # Phase 1 showcase & academic calendar views
-â”œâ”€â”€ docs/                           # Architectural blueprints & specifications
-â”‚   â”œâ”€â”€ REQUIREMENTS.md             # Functional & non-functional requirements
-â”‚   â”œâ”€â”€ ROLE_PERMISSION_MATRIX.md   # Granular RBAC permissions for all 4 roles
-â”‚   â”œâ”€â”€ ARCHITECTURE.md             # ERD diagrams, service layer, design tokens
-â”‚   â””â”€â”€ IMPLEMENTATION_ROADMAP.md   # 15 phased delivery milestones
-â”œâ”€â”€ manage.py
-â”œâ”€â”€ requirements/
-â”‚   â”œâ”€â”€ base.txt                    # Core Django dependencies
-â”‚   â”œâ”€â”€ dev.txt                     # Testing, linting, development tools
-â”‚   â””â”€â”€ prod.txt                    # Gunicorn, PostgreSQL drivers
-â”œâ”€â”€ .env.example
-â”œâ”€â”€ .gitignore
-â””â”€â”€ README.md
+├── apps/
+│   ├── accounts/       # Custom user, profiles, authentication, role access
+│   ├── academics/      # Departments, programs, years, semesters, courses
+│   ├── assessments/    # Assignment and submission models; quiz model facade
+│   ├── core/           # Landing page, academic events, calendar
+│   ├── courseware/     # Modules, learning resources, upload validation
+│   ├── quizzes/        # Quiz models, authoring, attempts, grading, results
+│   ├── planner/        # Study budget and workload planning service
+│   ├── attendance/     # Placeholder app
+│   ├── discussions/    # Placeholder app
+│   ├── gradebook/      # Placeholder app
+│   ├── notifications/ # Placeholder app
+│   └── reporting/      # Placeholder app
+├── config/settings/    # Shared, development, and production settings
+├── requirements/       # Runtime, development, production, and CI inputs
+├── static/             # CSS and JavaScript
+├── templates/          # Shared, role, feature, and Admin templates
+├── docs/               # Requirements, architecture, role matrix, roadmap
+├── manage.py
+└── README.md
 ```
 
----
+The request path is configured in `config/urls.py`, which mounts account, courseware, quiz, planner, and core URLs. `assessments` models are currently consumed by dashboards and the planner; they do not have their own URL module.
 
-## ðŸ‘¥ Four Core User Roles
+## Prerequisites
 
-| Role | Scope | Key Capabilities |
-| :--- | :--- | :--- |
-| **Administrator** | Institutional Governance | Manage academic departments, degree programs, course offerings, user directory, credentials, lecturer allocations, and institutional oversight. |
-| **Lecturer** | Instructional Leadership | Manage assigned courses, publish courseware, create assignments and quizzes, evaluate deliverables with rubrics and feedback, log session attendance. |
-| **Student** | Active Learning | Register for courses, access materials, submit assignments, attempt quizzes, track attendance, and use the **Rule-Based Smart Academic Workload Planner**. |
-| **Parent** | Authorized Observer | **Strictly read-only visibility** into explicitly linked students: attendance records, published assessment marks, upcoming deadlines, and registration slips. |
+- Python 3.11 or newer; CI coverage is specifically 3.11–3.13.
+- Git.
+- For production database configuration, PostgreSQL and the adapter from `requirements/prod.txt`.
 
----
+## Local setup
 
-## ðŸš« Strict Project Boundaries
+From the `academic_lms` directory, in PowerShell:
 
-To maintain high architectural integrity, predictable performance, and strict security:
-- **No AI or Large Language Model (LLM) integration**: All planning algorithms and calculations are 100% deterministic and rule-based.
-- **No live classes or video conferencing**: No WebRTC, third-party video call plugins, or Jitsi integrations.
-- **English only**: All user interface text, system labels, error messages, and documentation are strictly in English.
-
----
-
-## ðŸ› ï¸ Technology Stack & Dependencies
-
-| Component | Version | License | Purpose |
-| :--- | :--- | :--- | :--- |
-| **Python** | 3.14.7 | PSF License | Runtime language with modern typing (verified) |
-| **Django** | 5.2.18 | 3-Clause BSD | Core web framework, ORM, authentication (verified) |
-| **Pillow** | 13.0.0 | HPND License | Image processing for user profiles and assets |
-| **ReportLab** | 5.0.1 | 3-Clause BSD | Server-side PDF engine for transcripts and slips |
-| **python-decouple** | 3.8 | 3-Clause BSD | 12-factor configuration via `.env` |
-| **crispy-bootstrap5** | 2026.9 | MIT | Clean, accessible Bootstrap 5 form rendering |
-| **django-crispy-forms**| 2.7 | MIT | Form styling framework |
-| **WhiteNoise** | 6.12.0 | MIT | Efficient, compressed static file serving |
-| **requests** | 2.34.2 | Apache 2.0 | HTTP client for integrations |
-
-> [!NOTE]
-> `xhtml2pdf` was removed because its transitive dependency `pyhanko` / `cryptography` / `cffi` lacks pre-built wheels for Python 3.14 on Windows. ReportLab is used directly for all PDF generation tasks.
-
----
-
-## ðŸš€ Quick Start Guide
-
-### 1. Prerequisites
-Ensure Python 3.14.7 (64-bit) is installed on your Windows system.
-
-### 2. Environment Setup (Windows PowerShell)
 ```powershell
-# Navigate to the Academic LMS project directory
-cd D:\lms\academic_lms
-
-# Copy environment configuration if not already created
-cp .env.example .env
-
-# Create the dedicated virtual environment using Python 3.14
-py -3.14 -m venv .venv
-
-# Upgrade pip and install baseline dependencies
+py -3.11 -m venv .venv
 .venv\Scripts\python.exe -m pip install --upgrade pip
-.venv\Scripts\python.exe -m pip install -r requirements\base.txt
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-### 3. Database Initialization & Verification
+Edit `.env` for local use. Generate a unique Django key with:
+
 ```powershell
-# Run system integrity check
+.venv\Scripts\python.exe -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+Put the generated value in your ignored `.env` file. Do not commit `.env` or use the example placeholder in a deployment. The development settings use SQLite at `db.sqlite3`; the `DB_*` and `DATABASE_URL` variables are for the production settings.
+
+Initialize and run the application:
+
+```powershell
+.venv\Scripts\python.exe manage.py migrate
 .venv\Scripts\python.exe manage.py check
-
-# Verify migration status
-.venv\Scripts\python.exe manage.py makemigrations --check --dry-run
-.venv\Scripts\python.exe manage.py migrate --check
-
-# Execute automated test suite (157 tests — Phase 8 complete)
-.venv\Scripts\python.exe manage.py test --verbosity=2
-```
-
-### 4. Run Development Server
-```powershell
-# Start local development server on port 8000
 .venv\Scripts\python.exe manage.py runserver 127.0.0.1:8000
 ```
-Open your browser and navigate to: **`http://127.0.0.1:8000/`** to view the Phase 1 Design System & System Showcase.
 
----
+The application is served at `http://127.0.0.1:8000/`. Sign-in is at `/accounts/login/`, the Admin at `/admin/`, and the design-system showcase at `/dev-showcase/`.
 
-## ðŸ“‹ Phased Implementation Roadmap
+## Environment variables
 
-- [x] **Phase 1: Project Scaffolding, Core Configuration & Design System**
-- [x] **Phase 2: Custom Authentication, User Model, Profiles & Parent Linkage**
-- [x] **Phase 3: Academic Structure, Courses, Prerequisites & Student Enrollments**
-- [x] **Phase 4: Courseware & Digital Learning Materials**
-- [x] **Phase 5: Assignments, Submissions & Lecturer Rubric Grading** *(skeleton; quiz module delivered first)*
-- [x] **Phase 6: Quizzes, Question Bank & Timed Assessments** â€” MCQ, True/False, Short-Answer; auto-grading; manual grading desk; results & parent read-only access
-- [x] **Phase 7: Rule-Based Smart Academic Workload Planner Engine** (`apps.planner`) â€” 100% deterministic, zero AI, deadline clustering (&le;48h), Balanced/Moderate/Heavy/Conflict classification, 7-day schedule generator
-- [ ] **Phase 8: Consolidated Gradebook, GPA Engine & Transcripts**
-- [ ] **Phase 9: Session-Wise Class Attendance & Low-Attendance Alerts**
-- [ ] **Phase 10: Course Discussion Forums & Moderation**
-- [ ] **Phase 11: In-App Notification Center & Event Triggers**
-- [ ] **Phase 12: Role-Specific Dashboards (Admin, Lecturer, Student, Parent)**
-- [ ] **Phase 13: Official PDF Transcripts, Registration Slips & CSV Reporting**
-- [ ] **Phase 14: Repeatable Seed Demo Data Management Command**
-- [ ] **Phase 15: Quality Assurance, Security Hardening & Final Polish**
+`config/settings/base.py` reads `SECRET_KEY`, `DEBUG`, `ENVIRONMENT`, `ALLOWED_HOSTS`, `TIME_ZONE`, `COURSEWARE_MAX_UPLOAD_SIZE`, and `LOG_LEVEL`. Development also reads `DEFAULT_FROM_EMAIL`. Production reads database settings (`DATABASE_URL` or `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`), email settings, and the HTTPS/security flags shown in `.env.example`.
 
----
+`ENVIRONMENT` defaults to `development`; `config.settings.production` fixes it to `production`. `DEBUG` defaults to true in development and false in production. Production settings reject a missing, short, or known development `SECRET_KEY`. Set a unique key of at least 50 characters, a real `ALLOWED_HOSTS` list, production database/email values, and HTTPS cookie/redirect/HSTS settings appropriate to the hosting environment.
 
-## ðŸ“„ License
+## Database and migrations
 
-This project is licensed under the **MIT License**. Third-party frameworks and libraries retain their respective open-source licenses.
+Development uses SQLite, configured directly in `config/settings/development.py`. Production settings configure PostgreSQL from `DATABASE_URL` or the individual `DB_*` values. PostgreSQL deployment has not been exercised as part of this repository's local verification.
+
+Use `.venv\Scripts\python.exe manage.py migrate` to apply migrations. Check for uncommitted model changes without creating a migration using:
+
+```powershell
+.venv\Scripts\python.exe manage.py makemigrations --check --dry-run
+```
+
+Existing migrations are part of the application history and should not be removed to perform cleanup.
+
+## Development demo data
+
+The development-only command is:
+
+```powershell
+.venv\Scripts\python.exe manage.py seed_demo_data
+```
+
+It creates or reconciles generic numbered identities such as `student1` / `student1@example.com`, `lecturer1` / `lecturer1@example.com`, `parent1` / `parent1@example.com`, and `admin1` / `admin1@example.com`. The email is the sign-in identifier. Newly created accounts use the development-only password `password`; existing account passwords are preserved unless `--force` is supplied. Do not expose seeded accounts publicly or reuse this password outside local development. The command is blocked when `DEBUG` is false or the environment is production. Reconciliation preserves existing profile/link records while clearing demo contact details.
+
+## Django Admin
+
+Open `/admin/` and sign in with an active staff account. Access to the Admin requires Django staff status and is further restricted by each model's configured permissions. The Admin has its own brown-and-cream theme in `templates/admin/base_site.html` and `static/css/admin.css`; this stylesheet is not loaded by public pages.
+
+## Tests and CI
+
+Run the Django test suite and project checks from this directory:
+
+```powershell
+.venv\Scripts\python.exe manage.py check
+.venv\Scripts\python.exe manage.py makemigrations --check --dry-run
+.venv\Scripts\python.exe manage.py test
+```
+
+The GitHub Actions Django workflow installs `requirements/ci.txt` and runs those three checks on Python 3.11, 3.12, and 3.13. The Pylint workflow uses the same CI dependencies and analyzes Python source outside migrations and virtual environments. A local run in this checkout completed 162 tests successfully on Python 3.14.7; this is a local result, not a claim about GitHub Actions.
+
+## Deployment notes
+
+`config.settings.production` provides PostgreSQL configuration and WhiteNoise compressed static-file storage. `requirements/prod.txt` includes Gunicorn and the PostgreSQL driver. No hosting provider, production URL, or end-to-end deployment is defined or verified here. Configure a unique secret, `DEBUG=False`, allowed host names, PostgreSQL, email delivery, HTTPS, and secure cookie/HSTS settings before deploying. Collect static assets with `.venv\Scripts\python.exe manage.py collectstatic` as part of the deployment process.
+
+## Security notes
+
+- Password authentication is handled by Django's password hashing and validators.
+- View-level permissions scope lecturer access by course allocation, student access by enrollment, and parent access by explicit relationships.
+- Courseware files and URLs pass through validators; uploaded media is stored outside source control.
+- Keep `.env`, production secrets, local databases, uploaded media, and generated static output out of Git.
+- Development settings and seeded demo credentials are not suitable for public deployment.
+- Review production host, database, email, HTTPS, and secret settings for the target environment; a successful local check is not a deployment security audit.
+
+## Known limitations and future work
+
+Attendance, discussions, gradebook, notifications, and reporting apps are currently placeholders. Assignment/submission records exist without a complete web submission workflow. Student self-service enrollment is not implemented. External fonts and Bootstrap/Font Awesome are loaded from third-party CDNs. `docs/` contains project planning and architecture material; where it describes future work, treat that as a specification rather than evidence that the feature is implemented.

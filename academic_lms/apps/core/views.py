@@ -1,16 +1,14 @@
 """Views for apps.core: Landing showcase and Institutional Academic Calendar."""
 import calendar
-from datetime import date, datetime, timedelta
-from typing import List, Optional
+from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
 
-from apps.accounts.models import ParentStudentRelationship, Role, User
-from apps.academics.models import Course, CourseAllocation, StudentEnrollment
-from .models import AcademicEvent
+from apps.accounts.models import ParentStudentRelationship
+from apps.academics.models import Course
 from .services import CalendarService
 
 
@@ -25,28 +23,28 @@ def index_view(request: HttpRequest) -> HttpResponse:
                 "tag": "ADMIN",
                 "icon": "fa-shield-halved",
                 "color": "var(--color-primary-espresso)",
-                "description": "Comprehensive academic oversight. Manage departments, curricula, user accounts, course allocations, and institutional term structures.",
+                "description": "Manage academic records and user access through the institutional Admin.",
             },
             {
                 "name": "Lecturer",
                 "tag": "LECTURER",
                 "icon": "fa-chalkboard-user",
                 "color": "var(--color-primary-saddle)",
-                "description": "Curriculum delivery and evaluation. Publish learning resources, author and grade assignments and quizzes, and monitor student workload.",
+                "description": "Manage learning resources and quizzes for allocated courses, review quiz attempts, and inspect course workloads.",
             },
             {
                 "name": "Student",
                 "tag": "STUDENT",
                 "icon": "fa-user-graduate",
                 "color": "var(--color-accent-caramel)",
-                "description": "Active learning workspace. Access syllabus materials, submit coursework, take timed quizzes, track results, and optimize study schedules.",
+                "description": "Access course resources, take available quizzes, review results, and plan study time.",
             },
             {
                 "name": "Parent",
                 "tag": "PARENT",
                 "icon": "fa-users-viewfinder",
                 "color": "var(--color-accent-terracotta)",
-                "description": "Observer portal with verified student linkage. View upcoming deadlines, submission statuses, and published grades for linked students.",
+                "description": "View permitted resources, quiz results, deadlines, and workload information for linked students.",
             },
         ],
     }
@@ -58,35 +56,35 @@ def dev_showcase_view(request: HttpRequest) -> HttpResponse:
     context = {
         "title": "Design System Showcase",
         "system_name": "Academic LMS Design Tokens",
-        "phase_status": "Phase 8: Complete Integrated Scholastic LMS",
+        "phase_status": "Implemented Feature Showcase",
         "roles": [
             {
                 "name": "Administrator",
                 "tag": "ADMIN",
                 "icon": "fa-shield-halved",
                 "color": "var(--color-primary-espresso)",
-                "description": "Systemic academic governance, user directory, program curricula, allocations, and institutional oversight.",
+                "description": "Manage users and institutional academic records through the Django Admin.",
             },
             {
                 "name": "Lecturer",
                 "tag": "LECTURER",
                 "icon": "fa-chalkboard-user",
                 "color": "var(--color-primary-saddle)",
-                "description": "Curriculum delivery, digital materials, assignments, rubric grading, quizzes, and class session attendance.",
+                "description": "Manage course resources and quizzes for allocated courses and review quiz attempts.",
             },
             {
                 "name": "Student",
                 "tag": "STUDENT",
                 "icon": "fa-user-graduate",
                 "color": "var(--color-accent-caramel)",
-                "description": "Active coursework, submissions, quizzes, grades, attendance tracking, and the Smart Academic Workload Planner.",
+                "description": "Access course resources and quizzes, view results, and use the Smart Academic Workload Planner.",
             },
             {
                 "name": "Parent",
                 "tag": "PARENT",
                 "icon": "fa-users-viewfinder",
                 "color": "var(--color-accent-terracotta)",
-                "description": "Strictly read-only observer visibility into attendance, published academic results, and deadline progress for linked students.",
+                "description": "Read permitted course resources, quiz results, deadlines, and workload summaries for linked students.",
             },
         ],
     }

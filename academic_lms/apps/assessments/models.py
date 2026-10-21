@@ -20,6 +20,19 @@ from apps.quizzes.models import (  # noqa: F401
     StudentAnswer,
 )
 
+__all__ = (
+    "Quiz",
+    "QuizStatus",
+    "Question",
+    "QuestionType",
+    "QuestionOption",
+    "QuizAttempt",
+    "AttemptStatus",
+    "StudentAnswer",
+    "Assignment",
+    "AssignmentSubmission",
+)
+
 
 class Assignment(models.Model):
     """Course-linked academic assignment deliverable."""

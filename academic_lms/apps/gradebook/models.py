@@ -1,2 +1,1 @@
-"""Models for gradebook app (Scheduled for Phase 7 implementation)."""
-from django.db import models  # noqa: F401
+"""Placeholder for gradebook models; gradebook workflows are not implemented yet."""

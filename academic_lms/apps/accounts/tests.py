@@ -1,4 +1,4 @@
-"""Comprehensive Phase 2 tests for Academic LMS accounts app.
+"""Regression tests for authentication, account permissions, and profiles.
 
 Covers:
 - Login and logout (success and failure)
@@ -459,23 +459,26 @@ class SeedDemoDataTests(TestCase):
     @override_settings(DEBUG=True)
     def test_seed_creates_demo_accounts(self):
         self._call_seed()
-        self.assertTrue(User.objects.filter(email="student@gmail.com").exists())
-        self.assertTrue(User.objects.filter(email="lecturer@gmail.com").exists())
-        self.assertTrue(User.objects.filter(email="admin@gmail.com").exists())
-        self.assertTrue(User.objects.filter(email="parent@gmail.com").exists())
+        self.assertEqual(
+            set(User.objects.filter(email__endswith="@example.com").values_list("email", flat=True)),
+            {"student1@example.com", "lecturer1@example.com", "admin1@example.com", "parent1@example.com"},
+        )
+        student = User.objects.get(email="student1@example.com")
+        self.assertEqual(student.get_full_name, "Student 1")
+        self.assertEqual(student.get_short_name, "Student 1")
 
     @override_settings(DEBUG=True)
     def test_seed_idempotent_second_run(self):
         """Running seed twice should not duplicate accounts."""
         self._call_seed()
         self._call_seed()
-        self.assertEqual(User.objects.filter(email="student@gmail.com").count(), 1)
+        self.assertEqual(User.objects.filter(email="student1@example.com").count(), 1)
 
     @override_settings(DEBUG=True)
     def test_seed_creates_parent_student_relationship(self):
         self._call_seed()
-        parent = User.objects.get(email="parent@gmail.com")
-        student = User.objects.get(email="student@gmail.com")
+        parent = User.objects.get(email="parent1@example.com")
+        student = User.objects.get(email="student1@example.com")
         self.assertTrue(
             ParentStudentRelationship.objects.filter(
                 parent=parent, student=student
@@ -485,15 +488,15 @@ class SeedDemoDataTests(TestCase):
     @override_settings(DEBUG=True)
     def test_seed_assigns_correct_roles(self):
         self._call_seed()
-        self.assertEqual(User.objects.get(email="student@gmail.com").role, Role.STUDENT)
-        self.assertEqual(User.objects.get(email="lecturer@gmail.com").role, Role.LECTURER)
-        self.assertEqual(User.objects.get(email="admin@gmail.com").role, Role.ADMIN)
-        self.assertEqual(User.objects.get(email="parent@gmail.com").role, Role.PARENT)
+        self.assertEqual(User.objects.get(email="student1@example.com").role, Role.STUDENT)
+        self.assertEqual(User.objects.get(email="lecturer1@example.com").role, Role.LECTURER)
+        self.assertEqual(User.objects.get(email="admin1@example.com").role, Role.ADMIN)
+        self.assertEqual(User.objects.get(email="parent1@example.com").role, Role.PARENT)
 
     @override_settings(DEBUG=True)
     def test_seed_demo_passwords_are_hashed(self):
         self._call_seed()
-        student = User.objects.get(email="student@gmail.com")
+        student = User.objects.get(email="student1@example.com")
         self.assertTrue(student.check_password("password"))
         self.assertNotEqual(student.password, "password")
 
@@ -506,7 +509,75 @@ class SeedDemoDataTests(TestCase):
         with self.assertRaises(CommandError):
             call_command("seed_demo_data", stdout=out)
         # Demo accounts must NOT be created
-        self.assertFalse(User.objects.filter(email="student@gmail.com").exists())
+        self.assertFalse(User.objects.filter(email="student1@example.com").exists())
+
+    @override_settings(DEBUG=True, ENVIRONMENT="production")
+    def test_seed_refuses_production_environment_even_if_debug_is_enabled(self):
+        from django.core.management import call_command
+        from django.core.management.base import CommandError
+
+        with self.assertRaises(CommandError):
+            call_command("seed_demo_data", stdout=StringIO())
+
+    @override_settings(DEBUG=True)
+    def test_seed_anonymizes_legacy_accounts_in_place(self):
+        from django.core.management import call_command
+
+        student = make_user(
+            "student123", "legacy-student@example.test", "old-password",
+            role=Role.STUDENT, first_name="Private", last_name="Student",
+        )
+        student_profile = StudentProfile.objects.create(
+            user=student, student_id="LEGACY-STUDENT", program="Existing program",
+            phone="555-0101", emergency_contact="Private contact",
+        )
+        parent = make_user(
+            "parent123", "legacy-parent@example.test", "old-password",
+            role=Role.PARENT, first_name="Private", last_name="Parent",
+        )
+        parent_profile = ParentProfile.objects.create(
+            user=parent, phone="555-0102", address="Private address",
+        )
+        relationship = ParentStudentRelationship.objects.create(
+            parent=parent, student=student, relationship_type=RelationshipType.MOTHER,
+        )
+        relationship_id = relationship.pk
+        student_profile_id = student_profile.pk
+        parent_profile_id = parent_profile.pk
+
+        call_command("seed_demo_data", stdout=StringIO())
+        student.refresh_from_db()
+        parent.refresh_from_db()
+        student_profile.refresh_from_db()
+        parent_profile.refresh_from_db()
+        relationship.refresh_from_db()
+
+        self.assertEqual(student_profile.pk, student_profile_id)
+        self.assertEqual(parent_profile.pk, parent_profile_id)
+        self.assertEqual(student.pk, student_profile.user_id)
+        self.assertEqual(
+            (student.username, student.email, student.get_full_name),
+            ("student1", "student1@example.com", "Student 1"),
+        )
+        self.assertEqual(student_profile.program, "Existing program")
+        self.assertEqual((student_profile.phone, student_profile.emergency_contact), ("", ""))
+        self.assertEqual(
+            (parent.username, parent.email, parent.get_full_name),
+            ("parent1", "parent1@example.com", "Parent 1"),
+        )
+        self.assertEqual((parent_profile.phone, parent_profile.address), ("", ""))
+        self.assertEqual(relationship.pk, relationship_id)
+        self.assertEqual(relationship.relationship_type, RelationshipType.MOTHER)
+
+    @override_settings(DEBUG=True)
+    def test_seed_aborts_on_ambiguous_legacy_and_canonical_accounts(self):
+        from django.core.management import call_command
+        from django.core.management.base import CommandError
+
+        make_user("student123", "old-student@example.test", "pw", role=Role.STUDENT)
+        make_user("student1", "student1@example.com", "pw", role=Role.STUDENT)
+        with self.assertRaises(CommandError):
+            call_command("seed_demo_data", stdout=StringIO())
 
 
 # ===========================================================================

@@ -15,12 +15,11 @@ Key capabilities:
 """
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
-from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
 from django.utils import timezone
 
-from apps.accounts.models import Role, User
+from apps.accounts.models import User
 from apps.academics.models import Course, EnrollmentStatus, StudentEnrollment
 from apps.assessments.models import Assignment, AssignmentSubmission
 from apps.planner.models import StudentStudyBudget
@@ -495,7 +494,6 @@ class WorkloadPlannerService:
                     t.cluster_id = c_id
                     t.cluster_severity = severity
 
-                titles_str = ", ".join([f"{t.course_code}: {t.title}" for t in grouped])
                 desc = (
                     f"{task_count} deliverables due within {span_hours}h "
                     f"({start_time.strftime('%b %d, %H:%M')} – {end_time.strftime('%b %d, %H:%M')})"

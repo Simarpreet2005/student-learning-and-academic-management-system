@@ -1,8 +1,20 @@
 """Production settings for Academic LMS project."""
 import urllib.parse
+from django.core.exceptions import ImproperlyConfigured
+
 from .base import *
 
+ENVIRONMENT = "production"
 DEBUG = config("DEBUG", default=False, cast=bool)
+
+if (
+    not SECRET_KEY
+    or len(SECRET_KEY) < 50
+    or SECRET_KEY == "academic-lms-insecure-dev-key-change-in-production-1928374650"
+):
+    raise ImproperlyConfigured(
+        "Production settings require a unique SECRET_KEY with at least 50 characters."
+    )
 
 # PostgreSQL Configuration
 DATABASE_URL = config("DATABASE_URL", default="")

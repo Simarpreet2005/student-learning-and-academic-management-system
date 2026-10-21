@@ -2,7 +2,7 @@
 from decimal import Decimal
 
 from django.db import transaction
-from django.db.models import Avg, Count, Max, Min
+from django.db.models import Avg, Max, Min
 from django.utils import timezone
 
 from .models import AttemptStatus, QuestionType, Quiz, QuizAttempt, StudentAnswer

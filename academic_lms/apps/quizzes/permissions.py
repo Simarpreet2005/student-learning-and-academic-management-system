@@ -9,7 +9,7 @@ Strict server-side role and object-level boundaries:
 from django.db.models import QuerySet
 from django.utils import timezone
 
-from apps.accounts.models import ParentStudentRelationship, Role
+from apps.accounts.models import ParentStudentRelationship
 from apps.academics.models import Course, CourseAllocation, StudentEnrollment
 from .models import AttemptStatus, Quiz, QuizAttempt, QuizStatus
 

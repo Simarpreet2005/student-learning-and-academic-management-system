@@ -11,9 +11,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.models import Role, ParentStudentRelationship
 from apps.accounts.permissions import role_required
-from apps.academics.models import Course, CourseAllocation, StudentEnrollment
+from apps.academics.models import Course, CourseAllocation
 from .forms import LearningResourceForm, CourseModuleForm
-from .models import LearningResource, CourseModule, ResourceType, ResourceStatus
+from .models import LearningResource, ResourceType, ResourceStatus
 from .permissions import (
     can_view_resource,
     can_manage_resource,

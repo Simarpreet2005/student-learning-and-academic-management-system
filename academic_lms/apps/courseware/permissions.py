@@ -7,7 +7,7 @@ Strict server-side role and object-level boundaries:
 - Parent: Read-only access to published resources for linked students' enrolled courses.
 """
 from django.db.models import QuerySet
-from apps.accounts.models import Role, ParentStudentRelationship
+from apps.accounts.models import ParentStudentRelationship
 from apps.academics.models import CourseAllocation, StudentEnrollment
 from .models import LearningResource, ResourceStatus
 

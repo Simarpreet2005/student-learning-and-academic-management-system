@@ -7,14 +7,12 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
 
 from apps.accounts.models import ParentStudentRelationship, Role, User
 from apps.academics.models import Course, CourseAllocation
 from .forms import StudentStudyBudgetForm
 from .models import StudentStudyBudget
 from .permissions import (
-    can_manage_student_workload_preferences,
     can_view_course_workload,
     can_view_student_workload,
 )
@@ -82,7 +80,7 @@ def study_budget_preferences_view(request: HttpRequest) -> HttpResponse:
     if (getattr(user, "is_admin_role", False) or user.is_superuser) and request.GET.get("student_id"):
         student = get_object_or_404(User, id=request.GET.get("student_id"), role=Role.STUDENT)
 
-    budget, created = StudentStudyBudget.objects.get_or_create(student=student)
+    budget, _ = StudentStudyBudget.objects.get_or_create(student=student)
 
     if request.method == "POST":
         form = StudentStudyBudgetForm(request.POST, instance=budget)

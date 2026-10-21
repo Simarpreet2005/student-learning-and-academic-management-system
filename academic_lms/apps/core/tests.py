@@ -1,4 +1,4 @@
-"""Automated tests for Core and Phase 8 Academic Calendar & Dashboards."""
+"""Automated tests for core landing pages and the academic calendar."""
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 

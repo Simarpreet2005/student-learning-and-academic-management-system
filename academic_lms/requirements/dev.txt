@@ -1,16 +1,2 @@
-# ==============================================================================
-# Academic LMS — Development & Testing Dependencies
-# ==============================================================================
-
--r base.txt
-
-# Testing Frameworks & Mocking (MIT / BSD Licenses)
-pytest>=7.4.0
-pytest-django>=4.5.2
-factory-boy>=3.3.0
-Faker>=19.0.0
-
-# Code Quality, Formatting & Static Analysis (MIT / GPL-Compatible Licenses)
-flake8>=6.1.0
-black>=23.7.0
-isort>=5.12.0
+# Development installs runtime dependencies and the Pylint tools used in CI.
+-r ci.in

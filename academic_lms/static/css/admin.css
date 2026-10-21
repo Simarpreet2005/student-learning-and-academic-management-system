@@ -1,0 +1,522 @@
+/* Admin-only presentation. Brand colors and type come from theme.css. */
+:root {
+  color-scheme: light;
+  --color-primary-espresso: #2C1810;
+  --color-primary-espresso-hover: #1E0F0A;
+  --color-primary-saddle: #5D4037;
+  --color-primary-saddle-hover: #4E342E;
+  --color-accent-caramel: #A06D3B;
+  --color-accent-caramel-hover: #8D5B29;
+  --color-bg-canvas: #FAF7F2;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-subtle: #F5EFEB;
+  --color-border-subtle: #EAE0D5;
+  --color-border-strong: #DFD3C3;
+  --color-status-success: #3E6B48;
+  --color-status-warning: #C27D00;
+  --color-status-danger: #9E2A2B;
+  --color-status-danger-bg: #FDF0F0;
+  --color-status-success-bg: #EEF4EF;
+  --color-status-warning-bg: #FFF8E7;
+  --color-text-main: #241812;
+  --color-text-secondary: #53433C;
+  --color-text-muted: #7D6D64;
+  --color-text-inverse: #FFFFFF;
+  --font-family-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --shadow-sm: 0 1px 3px rgba(44, 24, 16, 0.05);
+  --shadow-card: 0 2px 8px rgba(44, 24, 16, 0.06), 0 1px 2px rgba(44, 24, 16, 0.04);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+}
+
+body {
+  background: var(--color-bg-canvas);
+  color: var(--color-text-main);
+  font-family: var(--font-family-body);
+}
+
+#container,
+#content {
+  background: var(--color-bg-canvas);
+}
+
+#header {
+  align-items: center;
+  background: var(--color-primary-espresso);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-inverse);
+  min-height: 64px;
+  padding: 0.75rem 1.5rem;
+}
+
+#branding h1,
+#branding h1 a:link,
+#branding h1 a:visited {
+  color: var(--color-text-inverse);
+  font-family: var(--font-family-heading);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+#branding h1 a:hover,
+#user-tools a:hover {
+  color: #f1d8b8;
+}
+
+#user-tools {
+  color: #f4e9dc;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+#user-tools a,
+#user-tools button {
+  border-radius: var(--radius-sm);
+  color: var(--color-text-inverse);
+  font-weight: 600;
+}
+
+.toggle-nav-sidebar {
+  background: var(--color-primary-saddle);
+  border: 1px solid #8b6b5c;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-inverse);
+}
+
+#nav-sidebar {
+  background: var(--color-bg-surface);
+  border-right: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-sm);
+  padding: 0.75rem;
+}
+
+#nav-sidebar a,
+#nav-sidebar th {
+  color: var(--color-primary-saddle);
+}
+
+#nav-sidebar a:hover {
+  background: var(--color-bg-subtle);
+  color: var(--color-primary-espresso);
+}
+
+#nav-sidebar .current-app .section,
+#nav-sidebar .current-model {
+  color: var(--color-primary-espresso);
+  font-weight: 700;
+}
+
+#nav-sidebar .current-model {
+  background: var(--color-bg-subtle);
+  border-left: 3px solid var(--color-accent-caramel);
+}
+
+#content {
+  box-sizing: border-box;
+  max-width: 1800px;
+  padding: 1.5rem clamp(1rem, 2.5vw, 2.5rem) 2.5rem;
+}
+
+#content h1,
+#content h2,
+#content h3,
+#content h4 {
+  color: var(--color-primary-espresso);
+  font-family: var(--font-family-heading);
+}
+
+.breadcrumbs {
+  background: var(--color-bg-subtle);
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
+  padding: 0.8rem 1.5rem;
+}
+
+.breadcrumbs a {
+  color: var(--color-primary-saddle);
+}
+
+.breadcrumbs a:hover {
+  color: var(--color-accent-caramel-hover);
+}
+
+.module,
+.inline-group,
+#changelist-filter,
+.submit-row {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.module h2,
+.module caption,
+.inline-group h2 {
+  background: var(--color-bg-subtle);
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-primary-espresso);
+  font-family: var(--font-family-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 0.8rem 1rem;
+}
+
+.module table,
+#result_list {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+#result_list thead th,
+.module thead th {
+  background: var(--color-bg-subtle);
+  border-bottom: 1px solid var(--color-border-strong);
+  color: var(--color-primary-espresso);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.75rem;
+  vertical-align: middle;
+}
+
+#result_list tbody tr:nth-child(even),
+.module tbody tr:nth-child(even) {
+  background: #fcfaf7;
+}
+
+#result_list tbody tr:hover,
+.module tbody tr:hover {
+  background: #f5efeb;
+}
+
+#result_list td,
+.module td,
+.module th {
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: 0.7rem 0.75rem;
+  vertical-align: middle;
+}
+
+#result_list a,
+.module a {
+  color: var(--color-primary-saddle);
+  font-weight: 600;
+}
+
+#result_list a:hover,
+.module a:hover {
+  color: var(--color-accent-caramel-hover);
+}
+
+.object-tools a,
+.object-tools a:link,
+.object-tools a:visited,
+.button,
+input[type="submit"],
+input[type="button"],
+button,
+a.button {
+  background: var(--color-primary-saddle);
+  border: 1px solid var(--color-primary-saddle);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-inverse);
+  cursor: pointer;
+  font-family: var(--font-family-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-height: 2.4rem;
+  padding: 0.55rem 0.9rem;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.object-tools a:hover,
+.button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover,
+button:hover,
+a.button:hover {
+  background: var(--color-primary-saddle-hover);
+  border-color: var(--color-primary-saddle-hover);
+  color: var(--color-text-inverse);
+}
+
+.submit-row input.default,
+input.default,
+.button.default {
+  background: var(--color-primary-espresso);
+  border-color: var(--color-primary-espresso);
+}
+
+.submit-row input.default:hover,
+input.default:hover,
+.button.default:hover {
+  background: var(--color-primary-espresso-hover);
+  border-color: var(--color-primary-espresso-hover);
+}
+
+.deletelink,
+a.deletelink,
+.submit-row a.deletelink {
+  background: var(--color-status-danger);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-inverse);
+  padding: 0.55rem 0.9rem;
+}
+
+.submit-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding: 0.8rem 1rem;
+}
+
+.submit-row input,
+.submit-row a {
+  margin: 0;
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select,
+.vTextField,
+.vLargeTextField {
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-main);
+  font: inherit;
+  max-width: 100%;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.65rem;
+}
+
+textarea,
+.vLargeTextField {
+  min-height: 7rem;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+button:focus-visible,
+a:focus-visible {
+  border-color: var(--color-accent-caramel);
+  box-shadow: 0 0 0 3px rgb(160 109 59 / 22%);
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.form-row,
+.aligned .form-row {
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: 1rem;
+}
+
+.form-row label,
+.aligned label,
+.aligned .form-row label {
+  color: var(--color-primary-espresso);
+  font-weight: 650;
+}
+
+.help,
+.helptext,
+.quiet,
+.small,
+.form-row .help {
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.required label,
+label.required {
+  color: var(--color-primary-espresso);
+}
+
+.errorlist,
+.errors,
+.errornote {
+  background: var(--color-status-danger-bg);
+  border: 1px solid #edc7c7;
+  border-radius: var(--radius-sm);
+  color: var(--color-status-danger);
+  padding: 0.55rem 0.75rem;
+}
+
+.messagelist li,
+.messagelist .success,
+.messagelist .warning,
+.messagelist .error {
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  margin: 0.75rem 1.5rem;
+  padding: 0.8rem 1rem;
+}
+
+.messagelist .success {
+  background: var(--color-status-success-bg);
+  color: var(--color-status-success);
+}
+
+.messagelist .warning {
+  background: var(--color-status-warning-bg);
+  color: #674300;
+}
+
+.messagelist .error {
+  background: var(--color-status-danger-bg);
+  color: var(--color-status-danger);
+}
+
+#changelist-filter {
+  margin-left: 1rem;
+  padding-bottom: 0.5rem;
+}
+
+#changelist-filter h2,
+#changelist-filter h3 {
+  color: var(--color-primary-espresso);
+  font-family: var(--font-family-heading);
+}
+
+#changelist-filter li.selected a {
+  color: var(--color-primary-espresso);
+  font-weight: 700;
+}
+
+#changelist-search,
+.actions,
+.paginator,
+.results {
+  margin-bottom: 1rem;
+}
+
+.actions,
+.paginator {
+  align-items: center;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.75rem;
+}
+
+.paginator a {
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.45rem;
+}
+
+.paginator a:hover {
+  background: var(--color-bg-subtle);
+}
+
+.selector,
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--color-primary-saddle);
+}
+
+.object-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: -2.7rem;
+}
+
+.object-tools li {
+  margin: 0;
+}
+
+.login #content {
+  box-sizing: border-box;
+  margin: 3rem auto;
+  max-width: 440px;
+}
+
+.login #content-main,
+.login .form-row {
+  background: var(--color-bg-surface);
+}
+
+.login .submit-row {
+  justify-content: flex-start;
+}
+
+@media (max-width: 900px) {
+  #content {
+    padding: 1.25rem 1rem 2rem;
+  }
+
+  #changelist-filter {
+    margin: 0 0 1rem;
+  }
+
+  #changelist-form .results {
+    overflow-x: auto;
+  }
+
+  #result_list {
+    min-width: 700px;
+  }
+
+  .object-tools {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  #header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+  }
+
+  #user-tools {
+    margin-left: 0;
+    text-align: left;
+  }
+
+  .breadcrumbs {
+    padding: 0.7rem 1rem;
+  }
+
+  #content {
+    padding: 1rem 0.65rem 1.5rem;
+  }
+
+  .form-row,
+  .aligned .form-row {
+    padding: 0.8rem;
+  }
+
+  .actions select,
+  .actions input,
+  #changelist-search input[type="text"] {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .submit-row {
+    justify-content: stretch;
+  }
+
+  .submit-row input,
+  .submit-row a {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  .login #content {
+    margin: 1.25rem auto;
+    padding: 1rem;
+    width: 100%;
+  }
+}

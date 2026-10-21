@@ -11,9 +11,7 @@ from .models import (
     QuestionOption,
     QuestionType,
     Quiz,
-    QuizAttempt,
     QuizStatus,
-    StudentAnswer,
 )
 
 

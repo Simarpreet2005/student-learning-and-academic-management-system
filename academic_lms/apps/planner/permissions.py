@@ -8,9 +8,7 @@ Enforces defensive security boundaries:
 - Admin: Institutional oversight across all courses and student plans.
 """
 from typing import Optional
-from django.core.exceptions import PermissionDenied
-
-from apps.accounts.models import ParentStudentRelationship, Role, User
+from apps.accounts.models import ParentStudentRelationship, User
 from apps.academics.models import Course, CourseAllocation
 
 

@@ -16,10 +16,8 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        # The supported intersection is Python 3.11+: Django 5.2 supports 3.10+,
-        # while Pillow 13 requires 3.11+.
+        # CI validates Python 3.11-3.13. Django 5.2 itself supports Python 3.10+.
         # https://docs.djangoproject.com/en/5.2/faq/install/#what-python-version-can-i-use-with-django
-        # https://pillow.readthedocs.io/en/stable/installation/python-support.html
         python-version: ["3.11", "3.12", "3.13"]
 
     defaults:

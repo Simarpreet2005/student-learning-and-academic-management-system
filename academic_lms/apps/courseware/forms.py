@@ -2,7 +2,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from apps.academics.models import Course, CourseAllocation
-from .models import LearningResource, CourseModule, ResourceType, ResourceStatus
+from .models import LearningResource, CourseModule, ResourceType
 from .validators import validate_resource_file, validate_resource_url
 
 

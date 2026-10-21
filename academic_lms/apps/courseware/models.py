@@ -163,7 +163,7 @@ class LearningResource(models.Model):
         size = self.file_size
         if size < 1024:
             return f"{size} B"
-        elif size < 1024 * 1024:
+        if size < 1024 * 1024:
             return f"{size / 1024:.1f} KB"
         return f"{size / (1024 * 1024):.2f} MB"
 

@@ -1,210 +1,168 @@
-"""Management command to populate development demo accounts for Academic LMS.
+"""Create generic, privacy-safe demo accounts for development environments."""
 
-Strictly idempotent and restricted to development environments.
-"""
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
+from django.db.models import Q
+
 from apps.accounts.models import (
-    User,
-    Role,
-    StudentProfile,
     LecturerProfile,
     ParentProfile,
     ParentStudentRelationship,
     RelationshipType,
+    Role,
+    StudentProfile,
+    User,
+)
+
+
+DEMO_ACCOUNTS = (
+    {
+        "key": "admin",
+        "role": Role.ADMIN,
+        "username": "admin1",
+        "legacy_username": "admin123",
+        "email": "admin1@example.com",
+        "label": "Administrator 1",
+    },
+    {
+        "key": "lecturer",
+        "role": Role.LECTURER,
+        "username": "lecturer1",
+        "legacy_username": "lecturer123",
+        "email": "lecturer1@example.com",
+        "label": "Lecturer 1",
+    },
+    {
+        "key": "student",
+        "role": Role.STUDENT,
+        "username": "student1",
+        "legacy_username": "student123",
+        "email": "student1@example.com",
+        "label": "Student 1",
+    },
+    {
+        "key": "parent",
+        "role": Role.PARENT,
+        "username": "parent1",
+        "legacy_username": "parent123",
+        "email": "parent1@example.com",
+        "label": "Parent 1",
+    },
 )
 
 
 class Command(BaseCommand):
-    help = "Seed development demo accounts for Admin, Lecturer, Student, and Parent roles."
+    help = "Seed generic development demo accounts for the four application roles."
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--force",
             action="store_true",
-            help="Force seeding even if demo users already exist (will update passwords and profile data).",
+            help="Reset passwords for existing demo accounts to the development password.",
         )
 
     def handle(self, *args, **options):
-        # Production safeguard: Strictly refuse execution if DEBUG is False
         if not getattr(settings, "DEBUG", False):
-            raise CommandError(
-                "Refusing to seed demo accounts: DEBUG is set to False. "
-                "This command is strictly disabled in production environments."
+            raise CommandError("Refusing to seed demo accounts while DEBUG is disabled.")
+        environment = getattr(settings, "ENVIRONMENT", "development")
+        if environment.lower() in {"prod", "production"}:
+            raise CommandError("Refusing to seed demo accounts in a production environment.")
+
+        with transaction.atomic():
+            users = {}
+            created_users = set()
+            for account in DEMO_ACCOUNTS:
+                user, created = self._get_or_create_demo_user(account)
+                if user.role != account["role"]:
+                    raise CommandError(
+                        f"Cannot reconcile {account['key']} demo account: "
+                        "matching account has a different role."
+                    )
+                user.username = account["username"]
+                user.email = account["email"]
+                user.first_name = account["label"]
+                user.last_name = ""
+                user.role = account["role"]
+                user.is_staff = account["role"] == Role.ADMIN
+                user.is_superuser = account["role"] == Role.ADMIN
+                user.is_active = True
+                if created or options["force"]:
+                    user.set_password("password")
+                user.save()
+                users[account["key"]] = user
+                if created:
+                    created_users.add(account["key"])
+
+            lecturer_profile, _ = LecturerProfile.objects.get_or_create(
+                user=users["lecturer"],
+                defaults={
+                    "employee_id": "LEC-DEMO-001",
+                    "department": "Computer Science",
+                    "office_location": "",
+                    "phone": "",
+                },
+            )
+            lecturer_profile.phone = ""
+            lecturer_profile.save(update_fields=["phone", "updated_at"])
+
+            student_profile, _ = StudentProfile.objects.get_or_create(
+                user=users["student"],
+                defaults={
+                    "student_id": "STD-DEMO-001",
+                    "program": "Software Engineering",
+                    "current_semester": "",
+                    "phone": "",
+                    "emergency_contact": "",
+                },
+            )
+            student_profile.phone = ""
+            student_profile.emergency_contact = ""
+            student_profile.date_of_birth = None
+            student_profile.save(
+                update_fields=["phone", "emergency_contact", "date_of_birth", "updated_at"]
             )
 
-        # Environment check safeguard
-        env_mode = getattr(settings, "ENVIRONMENT", "development")
-        if env_mode.lower() in ["prod", "production"]:
-            raise CommandError(
-                f"Refusing to seed demo accounts: ENVIRONMENT is '{env_mode}'. "
-                "Demo seeding is prohibited on production systems."
+            parent_profile, _ = ParentProfile.objects.get_or_create(user=users["parent"])
+            parent_profile.phone = ""
+            parent_profile.address = ""
+            parent_profile.save(update_fields=["phone", "address", "updated_at"])
+
+            ParentStudentRelationship.objects.get_or_create(
+                parent=users["parent"],
+                student=users["student"],
+                defaults={"relationship_type": RelationshipType.GUARDIAN},
             )
-
-        self.stdout.write(self.style.MIGRATE_HEADING("Seeding Academic LMS demo accounts..."))
-
-        demo_password = "password"
-
-        # 1. Administrator Account
-        admin_user, created = User.objects.get_or_create(
-            email="admin@gmail.com",
-            defaults={
-                "username": "admin123",
-                "first_name": "System",
-                "last_name": "Administrator",
-                "role": Role.ADMIN,
-                "is_staff": True,
-                "is_superuser": True,
-                "is_active": True,
-            },
-        )
-        admin_user.username = "admin123"
-        admin_user.first_name = "System"
-        admin_user.last_name = "Administrator"
-        admin_user.role = Role.ADMIN
-        admin_user.is_staff = True
-        admin_user.is_superuser = True
-        admin_user.is_active = True
-        admin_user.set_password(demo_password)
-        admin_user.save()
-        status_admin = "Created" if created else "Updated"
-        self.stdout.write(self.style.SUCCESS(f"  [{status_admin}] Admin: admin@gmail.com (admin123)"))
-
-        # 2. Lecturer Account
-        lecturer_user, created = User.objects.get_or_create(
-            email="lecturer@gmail.com",
-            defaults={
-                "username": "lecturer123",
-                "first_name": "Arthur",
-                "last_name": "Pendelton",
-                "role": Role.LECTURER,
-                "is_staff": False,
-                "is_superuser": False,
-                "is_active": True,
-            },
-        )
-        lecturer_user.username = "lecturer123"
-        lecturer_user.first_name = "Arthur"
-        lecturer_user.last_name = "Pendelton"
-        lecturer_user.role = Role.LECTURER
-        lecturer_user.is_staff = False
-        lecturer_user.is_superuser = False
-        lecturer_user.is_active = True
-        lecturer_user.set_password(demo_password)
-        lecturer_user.save()
-
-        lecturer_profile, _ = LecturerProfile.objects.get_or_create(
-            user=lecturer_user,
-            defaults={
-                "employee_id": "LEC-2026-001",
-                "department": "Computer Science & Engineering",
-                "office_location": "Science Hall Room 304",
-                "phone": "+1 (555) 234-5678",
-            },
-        )
-        lecturer_profile.employee_id = "LEC-2026-001"
-        lecturer_profile.department = "Computer Science & Engineering"
-        lecturer_profile.office_location = "Science Hall Room 304"
-        lecturer_profile.phone = "+1 (555) 234-5678"
-        lecturer_profile.save()
-        status_lec = "Created" if created else "Updated"
-        self.stdout.write(self.style.SUCCESS(f"  [{status_lec}] Lecturer: lecturer@gmail.com (lecturer123)"))
-
-        # 3. Student Account
-        student_user, created = User.objects.get_or_create(
-            email="student@gmail.com",
-            defaults={
-                "username": "student123",
-                "first_name": "Julian",
-                "last_name": "Mercer",
-                "role": Role.STUDENT,
-                "is_staff": False,
-                "is_superuser": False,
-                "is_active": True,
-            },
-        )
-        student_user.username = "student123"
-        student_user.first_name = "Julian"
-        student_user.last_name = "Mercer"
-        student_user.role = Role.STUDENT
-        student_user.is_staff = False
-        student_user.is_superuser = False
-        student_user.is_active = True
-        student_user.set_password(demo_password)
-        student_user.save()
-
-        student_profile, _ = StudentProfile.objects.get_or_create(
-            user=student_user,
-            defaults={
-                "student_id": "STD-2026-0001",
-                "program": "B.Sc. Software Engineering",
-                "current_semester": "Fall 2026",
-                "phone": "+1 (555) 345-6789",
-                "emergency_contact": "Eleanor Mercer (Mother) +1 (555) 456-7890",
-            },
-        )
-        student_profile.student_id = "STD-2026-0001"
-        student_profile.program = "B.Sc. Software Engineering"
-        student_profile.current_semester = "Fall 2026"
-        student_profile.phone = "+1 (555) 345-6789"
-        student_profile.emergency_contact = "Eleanor Mercer (Mother) +1 (555) 456-7890"
-        student_profile.save()
-        status_std = "Created" if created else "Updated"
-        self.stdout.write(self.style.SUCCESS(f"  [{status_std}] Student: student@gmail.com (student123)"))
-
-        # 4. Parent Account
-        parent_user, created = User.objects.get_or_create(
-            email="parent@gmail.com",
-            defaults={
-                "username": "parent123",
-                "first_name": "Eleanor",
-                "last_name": "Mercer",
-                "role": Role.PARENT,
-                "is_staff": False,
-                "is_superuser": False,
-                "is_active": True,
-            },
-        )
-        parent_user.username = "parent123"
-        parent_user.first_name = "Eleanor"
-        parent_user.last_name = "Mercer"
-        parent_user.role = Role.PARENT
-        parent_user.is_staff = False
-        parent_user.is_superuser = False
-        parent_user.is_active = True
-        parent_user.set_password(demo_password)
-        parent_user.save()
-
-        parent_profile, _ = ParentProfile.objects.get_or_create(
-            user=parent_user,
-            defaults={
-                "phone": "+1 (555) 456-7890",
-                "address": "42 Elm Crest Avenue, Campus Town",
-            },
-        )
-        parent_profile.phone = "+1 (555) 456-7890"
-        parent_profile.address = "42 Elm Crest Avenue, Campus Town"
-        parent_profile.save()
-        status_par = "Created" if created else "Updated"
-        self.stdout.write(self.style.SUCCESS(f"  [{status_par}] Parent: parent@gmail.com (parent123)"))
-
-        # 5. Parent-Student Relationship Linkage
-        rel, rel_created = ParentStudentRelationship.objects.get_or_create(
-            parent=parent_user,
-            student=student_user,
-            defaults={"relationship_type": RelationshipType.MOTHER},
-        )
-        rel.relationship_type = RelationshipType.MOTHER
-        rel.save()
-        status_rel = "Created" if rel_created else "Updated"
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"  [{status_rel}] Linked Parent ({parent_user.email}) -> Student ({student_user.email}) as Mother"
-            )
-        )
 
         self.stdout.write(
             self.style.SUCCESS(
-                "\nDemo accounts seeded successfully! All accounts configured with predictable development passwords."
+                "Demo accounts are ready: "
+                + ", ".join(
+                    f"{account['label']} ({'created' if account['key'] in created_users else 'updated'})"
+                    for account in DEMO_ACCOUNTS
+                )
             )
         )
+
+    @staticmethod
+    def _get_or_create_demo_user(account):
+        candidates = User.objects.filter(
+            Q(username=account["legacy_username"])
+            | Q(username=account["username"])
+            | Q(email=account["email"])
+        ).distinct()
+        matches = list(candidates)
+        if len(matches) > 1:
+            raise CommandError(
+                f"Cannot safely reconcile {account['key']} demo account: "
+                "multiple matching accounts exist."
+            )
+        if matches:
+            return matches[0], False
+        return User.objects.create_user(
+            username=account["username"],
+            email=account["email"],
+            password="password",
+            role=account["role"],
+            first_name=account["label"],
+        ), True

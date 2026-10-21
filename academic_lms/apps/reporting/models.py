@@ -1,2 +1,1 @@
-"""Models for reporting app (Scheduled for Phase 12 implementation)."""
-from django.db import models  # noqa: F401
+"""Placeholder for reporting models; reporting workflows are not implemented yet."""

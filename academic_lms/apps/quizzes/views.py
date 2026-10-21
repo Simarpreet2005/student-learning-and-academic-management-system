@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
@@ -19,7 +19,6 @@ from .forms import (
     QuestionForm,
     QuestionOptionFormSet,
     QuizForm,
-    ShortAnswerEvaluationForm,
 )
 from .models import (
     AttemptStatus,
@@ -305,16 +304,15 @@ def question_create_view(request: HttpRequest, quiz_pk: int) -> HttpResponse:
                 quiz.sync_total_marks()
                 messages.success(request, "Short-answer question created successfully.")
                 return redirect("quizzes:question_manage", pk=quiz.pk)
-            else:
-                formset = QuestionOptionFormSet(request.POST, instance=question)
-                if formset.is_valid():
-                    question.save()
-                    formset.save()
-                    quiz.sync_total_marks()
-                    messages.success(request, "Question and options created successfully.")
-                    return redirect("quizzes:question_manage", pk=quiz.pk)
-                else:
-                    messages.error(request, "Please correct the option errors below.")
+
+            formset = QuestionOptionFormSet(request.POST, instance=question)
+            if formset.is_valid():
+                question.save()
+                formset.save()
+                quiz.sync_total_marks()
+                messages.success(request, "Question and options created successfully.")
+                return redirect("quizzes:question_manage", pk=quiz.pk)
+            messages.error(request, "Please correct the option errors below.")
     else:
         form = QuestionForm(initial={"order": next_order, "marks": Decimal("1.00"), "question_type": QuestionType.MULTIPLE_CHOICE})
         question = Question(quiz=quiz, question_type=QuestionType.MULTIPLE_CHOICE)
@@ -356,14 +354,13 @@ def question_edit_view(request: HttpRequest, pk: int) -> HttpResponse:
                 quiz.sync_total_marks()
                 messages.success(request, "Question updated successfully.")
                 return redirect("quizzes:question_manage", pk=quiz.pk)
-            else:
-                if formset.is_valid():
-                    formset.save()
-                    quiz.sync_total_marks()
-                    messages.success(request, "Question and options updated successfully.")
-                    return redirect("quizzes:question_manage", pk=quiz.pk)
-                else:
-                    messages.error(request, "Please correct the option errors below.")
+
+            if formset.is_valid():
+                formset.save()
+                quiz.sync_total_marks()
+                messages.success(request, "Question and options updated successfully.")
+                return redirect("quizzes:question_manage", pk=quiz.pk)
+            messages.error(request, "Please correct the option errors below.")
     else:
         form = QuestionForm(instance=question)
         formset = QuestionOptionFormSet(instance=question)
@@ -527,15 +524,14 @@ def quiz_take_view(request: HttpRequest, quiz_pk: int, attempt_pk: int) -> HttpR
                     "The allotted time for this quiz has expired. Your responses have been automatically submitted and scored.",
                 )
                 return redirect("quizzes:quiz_result", attempt_pk=attempt.pk)
-            elif action == "submit":
+            if action == "submit":
                 QuizGradingService.grade_attempt(attempt, is_expired=False)
                 messages.success(
                     request,
                     "Quiz successfully submitted! Your answers have been recorded.",
                 )
                 return redirect("quizzes:quiz_result", attempt_pk=attempt.pk)
-            else:
-                messages.success(request, "Your answers have been saved. Continue working.")
+            messages.success(request, "Your answers have been saved. Continue working.")
 
     # GET request: server-side time enforcement
     if attempt.is_time_expired():

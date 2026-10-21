@@ -10,7 +10,7 @@ jobs:
       PYTHONPATH: .
     strategy:
       matrix:
-        # The shared supported range starts at Python 3.11 (Pillow 13's minimum).
+        # Keep lint aligned with the Django CI versions: Python 3.11-3.13.
         python-version: ["3.11", "3.12", "3.13"]
     defaults:
       run:

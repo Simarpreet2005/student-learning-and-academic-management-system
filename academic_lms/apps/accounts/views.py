@@ -54,7 +54,6 @@ from .permissions import (
     student_required,
     parent_required,
     can_view_student_data,
-    can_edit_profile,
 )
 
 
@@ -62,11 +61,11 @@ def get_dashboard_url_for_user(user: User) -> str:
     """Return the canonical role-specific dashboard URL for the authenticated user."""
     if user.is_superuser or user.is_staff or user.role == Role.ADMIN:
         return reverse("accounts:admin_dashboard")
-    elif user.role == Role.LECTURER:
+    if user.role == Role.LECTURER:
         return reverse("accounts:lecturer_dashboard")
-    elif user.role == Role.STUDENT:
+    if user.role == Role.STUDENT:
         return reverse("accounts:student_dashboard")
-    elif user.role == Role.PARENT:
+    if user.role == Role.PARENT:
         return reverse("accounts:parent_dashboard")
     return reverse("core:index")
 
@@ -170,7 +169,6 @@ def admin_dashboard_view(request: HttpRequest) -> HttpResponse:
     ).count()
 
     # Recent academic events
-    now = timezone.now()
     recent_events = AcademicEvent.objects.order_by("-start_date")[:5]
 
     context = {
@@ -527,7 +525,6 @@ def parent_dashboard_view(request: HttpRequest) -> HttpResponse:
         "workload": workload,
         "upcoming_events": upcoming_events,
     }
-    return render(request, "accounts/dashboards/parent.html", context)
     return render(request, "accounts/dashboards/parent.html", context)
 
 
