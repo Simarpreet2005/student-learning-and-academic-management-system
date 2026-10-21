@@ -127,6 +127,11 @@ body {
   font-weight: 700;
 }
 
+#nav-sidebar .current-app .section:link,
+#nav-sidebar .current-app .section:visited {
+  color: var(--color-primary-espresso);
+}
+
 #nav-sidebar .current-model {
   background: var(--color-bg-subtle);
   border-left: 3px solid var(--color-accent-caramel);
