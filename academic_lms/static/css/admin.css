@@ -41,6 +41,25 @@ body {
   background: var(--color-bg-canvas);
 }
 
+/* Django Admin leaves several content regions at its light gray default.
+   Set a deliberate dark foreground wherever the cream canvas is used. */
+#content,
+#content-main,
+#content-related,
+#changelist,
+#changelist-form,
+#changelist .paginator,
+.module,
+.inline-group,
+.form-row,
+.aligned,
+.object-tools,
+.actions,
+.results,
+.paginator {
+  color: var(--color-text-main);
+}
+
 #header {
   align-items: center;
   background: var(--color-primary-espresso);
