@@ -7,6 +7,8 @@
   <h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:"Academic LMS Administration" }}</a></h1>
 {% endblock %}
 
+{% block dark-mode-vars %}{% endblock %}
+
 {% block extrastyle %}
   {{ block.super }}
   <link rel="stylesheet" href="{% static 'css/admin.css' %}">
