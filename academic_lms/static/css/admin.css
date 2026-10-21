@@ -30,6 +30,52 @@
   --radius-md: 10px;
 }
 
+/* Keep Django's built-in variables on the same fixed brown-and-cream palette,
+   even when a browser has a saved dark theme preference. */
+:root,
+html[data-theme="dark"] {
+  color-scheme: light;
+  --primary: var(--color-primary-espresso);
+  --secondary: var(--color-primary-saddle);
+  --accent: var(--color-accent-caramel);
+  --primary-fg: var(--color-text-inverse);
+  --body-fg: var(--color-text-main);
+  --body-bg: var(--color-bg-canvas);
+  --body-quiet-color: var(--color-text-muted);
+  --body-medium-color: var(--color-text-secondary);
+  --body-loud-color: var(--color-primary-espresso);
+  --header-color: #f4e9dc;
+  --header-branding-color: var(--color-text-inverse);
+  --header-bg: var(--color-primary-espresso);
+  --header-link-color: var(--color-text-inverse);
+  --breadcrumbs-fg: var(--color-text-secondary);
+  --breadcrumbs-link-fg: var(--color-primary-saddle);
+  --breadcrumbs-bg: var(--color-bg-subtle);
+  --link-fg: var(--color-primary-saddle);
+  --link-hover-color: var(--color-accent-caramel-hover);
+  --link-selected-fg: var(--color-primary-espresso);
+  --hairline-color: var(--color-border-subtle);
+  --border-color: var(--color-border-strong);
+  --error-fg: var(--color-status-danger);
+  --darkened-bg: var(--color-bg-subtle);
+  --selected-bg: var(--color-bg-muted);
+  --selected-row: var(--color-bg-subtle);
+  --button-fg: var(--color-text-inverse);
+  --button-bg: var(--color-primary-saddle);
+  --button-hover-bg: var(--color-primary-saddle-hover);
+  --default-button-bg: var(--color-primary-espresso);
+  --default-button-hover-bg: var(--color-primary-espresso-hover);
+  --close-button-bg: var(--color-primary-saddle);
+  --close-button-hover-bg: var(--color-primary-saddle-hover);
+  --object-tools-fg: var(--color-text-inverse);
+  --object-tools-bg: var(--color-primary-saddle);
+  --object-tools-hover-bg: var(--color-primary-saddle-hover);
+}
+
+.theme-toggle {
+  display: none !important;
+}
+
 body {
   background: var(--color-bg-canvas);
   color: var(--color-text-main);
@@ -146,7 +192,18 @@ body {
 #content h1,
 #content h2,
 #content h3,
-#content h4 {
+#content h4,
+#content h5,
+#content h6,
+#nav-sidebar h1,
+#nav-sidebar h2,
+#nav-sidebar h3,
+#nav-sidebar h4,
+#nav-sidebar h5,
+#nav-sidebar h6,
+#nav-sidebar .section,
+#changelist-filter h2,
+#changelist-filter h3 {
   color: var(--color-primary-espresso);
   font-family: var(--font-family-heading);
 }
@@ -400,12 +457,6 @@ label.required {
 #changelist-filter {
   margin-left: 1rem;
   padding-bottom: 0.5rem;
-}
-
-#changelist-filter h2,
-#changelist-filter h3 {
-  color: var(--color-primary-espresso);
-  font-family: var(--font-family-heading);
 }
 
 #changelist-filter li.selected a {
