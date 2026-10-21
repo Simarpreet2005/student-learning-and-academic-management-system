@@ -246,6 +246,16 @@ body {
   padding: 0.8rem 1rem;
 }
 
+.module caption a.section:link,
+.module caption a.section:visited {
+  color: var(--color-primary-espresso);
+}
+
+.module caption a.section:focus,
+.module caption a.section:hover {
+  color: var(--color-primary-saddle);
+}
+
 .module table,
 #result_list {
   border-collapse: separate;
