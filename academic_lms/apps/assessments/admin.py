@@ -26,6 +26,7 @@ class AssignmentSubmissionAdmin(admin.ModelAdmin):
         "student",
         "status",
         "submitted_at",
+        "submission_file",
         "score",
         "is_active",
     )

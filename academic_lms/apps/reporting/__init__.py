@@ -1,1 +1,0 @@
-"""Reporting app package."""

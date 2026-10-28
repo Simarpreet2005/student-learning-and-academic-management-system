@@ -1,1 +1,0 @@
-"""Gradebook app package."""

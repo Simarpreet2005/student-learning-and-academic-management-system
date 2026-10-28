@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Assignments | Academic LMS{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div><h1 class="h2 mb-1">Assignments</h1><p class="text-muted mb-0">Course deadlines, submissions, and feedback.</p></div>
+    {% if can_create %}<a class="btn btn-outline-academic" href="{% url 'assessments:create' %}">Create assignment</a>{% endif %}
+  </div>
+  <div class="card border-0 shadow-sm"><div class="table-responsive">
+    <table class="table align-middle mb-0"><thead><tr><th>Assignment</th><th>Course</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody>
+      {% for assignment, submission in assignment_rows %}
+      <tr><td><a href="{% url 'assessments:detail' assignment.pk %}" class="fw-semibold">{{ assignment.title }}</a></td><td>{{ assignment.course.code }}</td><td>{{ assignment.due_date|date:"M j, Y, H:i" }}</td><td>{% if submission %}{{ submission.get_status_display }}{% else %}Not submitted{% endif %}</td><td><a class="btn btn-sm btn-outline-secondary" href="{% url 'assessments:detail' assignment.pk %}">Open</a></td></tr>
+      {% empty %}<tr><td colspan="5" class="text-center text-muted py-5">No assignments are available.</td></tr>{% endfor %}
+    </tbody></table>
+  </div></div>
+</div>
+{% endblock %}

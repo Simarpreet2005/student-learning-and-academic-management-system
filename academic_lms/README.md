@@ -2,7 +2,7 @@
 
 Academic LMS is a role based learning and academic management application for administrators, lecturers, students, and parents or guardians. It brings course records, learning resources, quizzes, an academic calendar, and a deterministic workload planner into one Django project.
 
-This README describes the code currently in this repository. Some registered Django apps and documents are scaffolding or plans; they are identified as such below rather than described as finished features.
+This README describes the code currently in this repository. Documents under `docs/` may describe future work and are identified as specifications where applicable.
 
 ## Problem and objectives
 
@@ -14,12 +14,14 @@ The project provides a shared place to manage academic course structures and lea
 - Admin-managed users, role profiles, parent-student relationships, departments, programs, academic years, semesters, courses, allocations, and enrollments.
 - Academic events and a calendar with month, week, and list views, plus role-scoped course events.
 - Course modules and learning resources, including file and external-link validation, access checks, and downloads.
+- Assignment authoring for administrators and allocated lecturers; enrolled students can submit notes or validated files, revise work until the cutoff, and view grades and lecturer feedback.
+- Student self-service enrollment and course dropping for courses offered during the active academic term.
 - Quizzes with question authoring, timed attempts, automatic objective-question grading, short-answer review, and result views.
 - A deterministic workload planner that prioritizes assignment and quiz deadlines, identifies close deadline clusters, and produces a seven-day plan when a student sets study availability.
 - Django Admin registrations for accounts, academics, courseware, quizzes, and related records. The Admin uses an isolated brown-and-cream stylesheet.
 - Automated Django tests and GitHub Actions workflows for system checks, migration consistency, tests, and Pylint.
 
-Assignment and submission data models are present and used by dashboard/planner queries. The current URL configuration does not expose a complete student assignment-submission workflow. The registered `attendance`, `discussions`, `gradebook`, `notifications`, and `reporting` apps are placeholders; attendance tracking, forums, GPA/transcripts, notification delivery, and report exports are not implemented.
+Attendance, discussions, gradebook, notifications, and reporting are not implemented and are not registered Django apps. These remain future work.
 
 ## Roles and access
 
@@ -27,7 +29,7 @@ Assignment and submission data models are present and used by dashboard/planner 
 | --- | --- |
 | Administrator | Staff/superuser access to Django Admin and institutional dashboard. Admin registrations cover users, role profiles, relationship links, academic structure, courseware, quizzes, questions, attempts, and answers. |
 | Lecturer | Courseware and quiz authoring/grading for courses allocated to the lecturer; lecturer dashboard and course workload summaries. |
-| Student | Own profile and dashboard, resources for enrolled courses, published quizzes and own results, and own workload preferences/plan. Enrollment records are managed through the Admin; there is no self-service enrollment route. |
+| Student | Own profile and dashboard, self-service enrollment and course dropping during active terms, resources for enrolled courses, assignment submissions and grades, published quizzes and own results, and own workload preferences/plan. |
 | Parent | Read-only information for students explicitly linked to the parent account, including permitted course resources, published quiz results, deadlines, and workload summaries. |
 
 These are application-level checks in views and permission helpers as well as Django Admin's staff/permission checks. A parent link is required for student-specific observer access.
@@ -50,16 +52,11 @@ academic_lms/
 ├── apps/
 │   ├── accounts/       # Custom user, profiles, authentication, role access
 │   ├── academics/      # Departments, programs, years, semesters, courses
-│   ├── assessments/    # Assignment and submission models; quiz model facade
+│   ├── assessments/    # Assignment submission and grading workflows; quiz model facade
 │   ├── core/           # Landing page, academic events, calendar
 │   ├── courseware/     # Modules, learning resources, upload validation
 │   ├── quizzes/        # Quiz models, authoring, attempts, grading, results
 │   ├── planner/        # Study budget and workload planning service
-│   ├── attendance/     # Placeholder app
-│   ├── discussions/    # Placeholder app
-│   ├── gradebook/      # Placeholder app
-│   ├── notifications/ # Placeholder app
-│   └── reporting/      # Placeholder app
 ├── config/settings/    # Shared, development, and production settings
 ├── requirements/       # Runtime, development, production, and CI inputs
 ├── static/             # CSS and JavaScript
@@ -69,7 +66,7 @@ academic_lms/
 └── README.md
 ```
 
-The request path is configured in `config/urls.py`, which mounts account, courseware, quiz, planner, and core URLs. `assessments` models are currently consumed by dashboards and the planner; they do not have their own URL module.
+The request path is configured in `config/urls.py`, which mounts accounts, enrollment, assignments, courseware, quizzes, planner, and core URLs.
 
 ## Prerequisites
 
@@ -148,7 +145,7 @@ Run the Django test suite and project checks from this directory:
 .venv\Scripts\python.exe manage.py test
 ```
 
-The GitHub Actions Django workflow installs `requirements/ci.txt` and runs those three checks on Python 3.11, 3.12, and 3.13. The Pylint workflow uses the same CI dependencies and analyzes Python source outside migrations and virtual environments. A local run in this checkout completed 162 tests successfully on Python 3.14.7; this is a local result, not a claim about GitHub Actions.
+The GitHub Actions Django workflow installs `requirements/ci.txt` and runs those three checks on Python 3.11, 3.12, and 3.13. The Pylint workflow uses the same CI dependencies and analyzes Python source outside migrations and virtual environments.
 
 ## Deployment notes
 
@@ -165,4 +162,4 @@ The GitHub Actions Django workflow installs `requirements/ci.txt` and runs those
 
 ## Known limitations and future work
 
-Attendance, discussions, gradebook, notifications, and reporting apps are currently placeholders. Assignment/submission records exist without a complete web submission workflow. Student self-service enrollment is not implemented. External fonts and Bootstrap/Font Awesome are loaded from third-party CDNs. `docs/` contains project planning and architecture material; where it describes future work, treat that as a specification rather than evidence that the feature is implemented.
+Attendance, discussions, gradebook, notifications, and reporting are future work and are not registered apps. PostgreSQL production settings are provided, but a PostgreSQL deployment has not been exercised. External fonts and Bootstrap/Font Awesome are loaded from third-party CDNs. `docs/` contains project planning and architecture material; where it describes future work, treat that as a specification rather than evidence that the feature is implemented.

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}{{ assignment.title }} | Academic LMS{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <a href="{% url 'assessments:list' %}" class="text-decoration-none">&larr; Assignments</a>
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mt-3 mb-4">
+    <div><span class="badge bg-light text-dark border">{{ assignment.course.code }}</span><h1 class="h2 mt-2">{{ assignment.title }}</h1><p class="text-muted">Due {{ assignment.due_date|date:"M j, Y, H:i" }}{% if assignment.cutoff_date %} · Final cutoff {{ assignment.cutoff_date|date:"M j, Y, H:i" }}{% endif %}</p></div>
+    {% if can_manage %}<a class="btn btn-outline-secondary" href="{% url 'assessments:edit' assignment.pk %}">Edit assignment</a>{% endif %}
+  </div>
+  <div class="card border-0 shadow-sm p-4 mb-4"><h2 class="h5">Instructions</h2><div>{{ assignment.description|linebreaks }}</div><div class="small text-muted">Maximum marks: {{ assignment.maximum_marks }}{% if assignment.estimated_effort_hours %} · Estimated effort: {{ assignment.estimated_effort_hours }} hours{% endif %}</div></div>
+  {% if user.is_student_role %}
+    {% if submission %}
+      <div class="card border-0 shadow-sm p-4 mb-4"><h2 class="h5">Your submission</h2><p class="mb-1">{{ submission.get_status_display }} · submitted {{ submission.submitted_at|date:"M j, Y, H:i" }}</p>{% if submission.submission_notes %}<p>{{ submission.submission_notes|linebreaks }}</p>{% endif %}{% if submission.submission_file %}<a href="{% url 'assessments:download_submission' submission.pk %}">Download your submitted file</a>{% endif %}{% if submission.score != None %}<hr><p class="mb-1"><strong>Score:</strong> {{ submission.score }} / {{ assignment.maximum_marks }}</p>{% endif %}{% if submission.lecturer_feedback %}<p><strong>Lecturer feedback:</strong> {{ submission.lecturer_feedback|linebreaks }}</p>{% endif %}</div>
+    {% endif %}
+    {% if can_submit %}<form method="post" enctype="multipart/form-data" class="card border-0 shadow-sm p-4">{% csrf_token %}<h2 class="h5">{% if submission %}Update submission{% else %}Submit your work{% endif %}</h2><p class="small text-muted">Attach a supported document or include notes within the upload size limit.</p>{% for field in form %}<div class="mb-3"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}{% for error in form.non_field_errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}<button class="btn btn-outline-academic" type="submit">Submit assignment</button></form>{% else %}<div class="alert alert-secondary">The submission cutoff has passed.</div>{% endif %}
+  {% endif %}
+  {% if can_manage %}
+    <section class="mt-5"><h2 class="h4 mb-3">Student submissions</h2><div class="card border-0 shadow-sm table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Student</th><th>Submitted</th><th>Status</th><th>Score</th><th></th></tr></thead><tbody>{% for item in submissions %}<tr><td>{{ item.student.get_full_name }}</td><td>{{ item.submitted_at|date:"M j, Y, H:i" }}</td><td>{{ item.get_status_display }}</td><td>{% if item.score != None %}{{ item.score }} / {{ assignment.maximum_marks }}{% else %}—{% endif %}</td><td><a class="btn btn-sm btn-outline-secondary" href="{% url 'assessments:grade' item.pk %}">Review</a>{% if item.submission_file %} <a class="btn btn-sm btn-outline-secondary" href="{% url 'assessments:download_submission' item.pk %}">File</a>{% endif %}</td></tr>{% empty %}<tr><td colspan="5" class="text-center text-muted py-4">No submissions yet.</td></tr>{% endfor %}</tbody></table></div></section>
+  {% endif %}
+</div>
+{% endblock %}

@@ -8,6 +8,7 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
+from apps.courseware.validators import resource_upload_path, validate_resource_file
 
 from apps.quizzes.models import (  # noqa: F401
     Quiz,
@@ -121,6 +122,12 @@ class AssignmentSubmission(models.Model):
         verbose_name="Status",
     )
     submission_notes = models.TextField(blank=True, verbose_name="Submission Notes")
+    submission_file = models.FileField(
+        upload_to=resource_upload_path,
+        validators=[validate_resource_file],
+        blank=True,
+        verbose_name="Submitted File",
+    )
     score = models.DecimalField(
         max_digits=5,
         decimal_places=2,
@@ -128,6 +135,7 @@ class AssignmentSubmission(models.Model):
         blank=True,
         verbose_name="Score Awarded",
     )
+    lecturer_feedback = models.TextField(blank=True, verbose_name="Lecturer Feedback")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -145,3 +153,10 @@ class AssignmentSubmission(models.Model):
 
     def __str__(self) -> str:
         return f"{self.assignment.title} - {self.student.get_full_name}"
+
+    def clean(self):
+        super().clean()
+        if self.score is not None and self.assignment_id:
+            if self.score < 0 or self.score > self.assignment.maximum_marks:
+                from django.core.exceptions import ValidationError
+                raise ValidationError({"score": "Score must be between zero and the assignment's maximum marks."})

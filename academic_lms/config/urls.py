@@ -12,6 +12,8 @@ admin.site.index_title = "Institutional Governance & System Administration"
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("apps.accounts.urls")),
+    path("enrollment/", include("apps.academics.urls")),
+    path("assignments/", include("apps.assessments.urls")),
     path("courseware/", include("apps.courseware.urls")),
     path("quizzes/", include("apps.quizzes.urls")),
     path("planner/", include("apps.planner.urls")),

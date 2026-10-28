@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}{{ heading }} | Academic LMS{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width: 850px">
+  <a href="{% url 'assessments:list' %}" class="text-decoration-none">&larr; Assignments</a>
+  <h1 class="h2 mt-3 mb-4">{{ heading }}</h1>
+  <form method="post" class="card border-0 shadow-sm p-4">{% csrf_token %}
+    {% for field in form %}<div class="mb-3">{% if field.field.widget.input_type == 'checkbox' %}<div class="form-check">{{ field }}<label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label></div>{% else %}<label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% endif %}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}
+    {% for error in form.non_field_errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}
+    <button class="btn btn-outline-academic" type="submit">Save assignment</button>
+  </form>
+</div>
+{% endblock %}
